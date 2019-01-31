@@ -22,13 +22,13 @@ from abc import ABCMeta, abstractmethod
 from copy import copy
 from typing import List
 
+from .results import EvaluationResults
 from ..corpus.indexing import LetterIndexing
-from ..evaluation.results import EvaluationResults
 from ..model.base import VectorSemanticModel
 from ..model.ngram import NgramModel
 from ..utils.exceptions import WordNotFoundError
 from ..utils.maths import DistanceType, binomial_bayes_factor_one_sided
-from ...preferences.preferences import Preferences
+from ..preferences.preferences import Preferences
 
 logger = logging.getLogger(__name__)
 

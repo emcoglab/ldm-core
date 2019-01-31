@@ -21,7 +21,7 @@ from typing import Dict
 
 import yaml
 
-from ..core.utils.metaclasses import Singleton
+from ..utils.metaclasses import Singleton
 
 
 logger = logging.getLogger(__name__)

@@ -25,7 +25,7 @@ import numpy
 
 from ..corpus.corpus import CorpusMetadata
 from ..utils.maths import DistanceType, distance
-from ...preferences.preferences import Preferences
+from ..preferences.preferences import Preferences
 
 logger = logging.getLogger(__name__)
 

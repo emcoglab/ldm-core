@@ -22,10 +22,10 @@ from os import path, makedirs
 
 import gensim
 
+from .base import VectorSemanticModel, DistributionalSemanticModel
 from ..utils.exceptions import WordNotFoundError
 from ..utils.maths import distance, DistanceType
 from ..corpus.corpus import CorpusMetadata, BatchedCorpus
-from ..model.base import VectorSemanticModel, DistributionalSemanticModel
 
 logger = logging.getLogger(__name__)
 

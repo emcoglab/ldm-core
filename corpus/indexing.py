@@ -22,7 +22,7 @@ from typing import List, Dict
 
 import nltk
 
-from ..corpus.corpus import BatchedCorpus
+from .corpus import BatchedCorpus
 
 logger = logging.getLogger(__name__)
 

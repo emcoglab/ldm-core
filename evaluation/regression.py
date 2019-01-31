@@ -30,7 +30,7 @@ from ..model.ngram import NgramModel
 from ..model.predict import PredictVectorModel
 from ..utils.exceptions import WordNotFoundError
 from ..utils.maths import DistanceType
-from ...preferences.preferences import Preferences
+from ..preferences.preferences import Preferences
 
 logger = logging.getLogger(__name__)
 

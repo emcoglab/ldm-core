@@ -25,9 +25,9 @@ from os import path, makedirs
 import numpy
 import scipy.sparse
 
+from .base import VectorSemanticModel, DistributionalSemanticModel, ScalarSemanticModel
 from ..corpus.corpus import CorpusMetadata, WindowedCorpus
 from ..corpus.indexing import FreqDist, TokenIndex
-from ..model.base import VectorSemanticModel, DistributionalSemanticModel, ScalarSemanticModel
 from ..utils.constants import Chirality
 from ..utils.exceptions import WordNotFoundError
 from ..utils.maths import DistanceType, distance

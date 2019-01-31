@@ -18,10 +18,10 @@ caiwingfield.net
 import logging
 from abc import ABCMeta
 
+from .base import VectorSemanticModel, DistributionalSemanticModel
+from .count import CountVectorModel, LogCoOccurrenceCountModel, PPMIModel, ProbabilityRatioModel, PMIModel
 from ..corpus.corpus import CorpusMetadata
 from ..corpus.indexing import FreqDist
-from ..model.base import VectorSemanticModel, DistributionalSemanticModel
-from ..model.count import CountVectorModel, LogCoOccurrenceCountModel, PPMIModel, ProbabilityRatioModel, PMIModel
 from ..utils.exceptions import WordNotFoundError
 
 logger = logging.getLogger(__name__)

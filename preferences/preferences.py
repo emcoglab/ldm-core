@@ -18,7 +18,7 @@ from collections import namedtuple
 from os import path
 
 from .config import Config
-from ..core.corpus.corpus import CorpusMetadata
+from ..corpus.corpus import CorpusMetadata
 
 
 class Preferences:
