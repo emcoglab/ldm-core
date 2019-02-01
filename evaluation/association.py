@@ -27,12 +27,12 @@ import scipy.stats
 import statsmodels.formula.api as sm
 from pandas import DataFrame
 
-from ..results import EvaluationResults
+from .results import EvaluationResults
 from ..model.base import DistributionalSemanticModel, VectorSemanticModel
 from ..model.ngram import NgramModel
 from ..utils.exceptions import WordNotFoundError
 from ..utils.maths import DistanceType, CorrelationType
-from ...preferences.preferences import Preferences
+from ..preferences.preferences import Preferences
 
 logger = logging.getLogger(__name__)
 
