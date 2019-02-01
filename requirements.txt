@@ -4,4 +4,4 @@ numpy
 pandas
 scipy
 statsmodels
-yaml
+ruamel-yaml
