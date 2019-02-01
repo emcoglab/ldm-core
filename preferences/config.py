@@ -21,17 +21,22 @@ from typing import Dict
 
 import yaml
 
-from ..utils.metaclasses import Singleton
-
+from ..utils.metaclasses import UnsettableSingleton
 
 logger = logging.getLogger(__name__)
 
 
-class Config(metaclass=Singleton):
+class Config(metaclass=UnsettableSingleton):
     """
     Config class.
     It's a singleton, so whatever state it's in when it's called the first time, that's how it'll remain.
     """
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        Config._unset()
 
     def __init__(self, use_config_overrides_from_file: str = None):
         default_config_file_location = path.join(path.dirname(path.realpath(__file__)), 'default_config.yaml')
