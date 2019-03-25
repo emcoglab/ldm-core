@@ -2,6 +2,6 @@ gensim
 nltk
 numpy
 pandas
+pyyaml
 scipy
 statsmodels
-ruamel-yaml
