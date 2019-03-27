@@ -54,10 +54,10 @@ class Config(metaclass=UnsettableSingleton):
         self._config_default: Dict
         self._config_override: Dict
         with open(default_config_file_location, mode="r", encoding="utf-8") as default_config_file:
-            self._config_default = yaml.load(default_config_file)
+            self._config_default = yaml.load(default_config_file, yaml.SafeLoader)
         if use_config_overrides_from_file is not None:
             with open(use_config_overrides_from_file, mode="r", encoding="utf-8") as override_config_file:
-                self._config_override = yaml.load(override_config_file)
+                self._config_override = yaml.load(override_config_file, yaml.SafeLoader)
         else:
             self._config_override = None
 
