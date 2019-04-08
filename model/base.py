@@ -20,10 +20,12 @@ import os
 
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
+from functools import reduce, partial
 
 import numpy
 
 from ..corpus.corpus import CorpusMetadata
+from ..corpus.multiword import VectorCombinatorType, multiword_combinator, ngram_to_unigrams
 from ..utils.maths import DistanceType, distance
 from ..preferences.preferences import Preferences
 
@@ -514,7 +516,9 @@ class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
         """
         return self.nearest_neighbours(word, distance_type, 1)[0]
 
-    def distance_between(self, word_1, word_2, distance_type: DistanceType, truncate_vectors_at_length: int = None) -> float:
+    def distance_between(self, word_1, word_2,
+                         distance_type: DistanceType,
+                         truncate_vectors_at_length: int = None) -> float:
         """
         Returns the distance between the two specified words
         :param word_1:
@@ -526,6 +530,36 @@ class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
         """
         v_1 = self.vector_for_word(word_1)
         v_2 = self.vector_for_word(word_2)
+
+        # TODO: The vectors that come out of word2vec may not be like this, in which case this won't work.
+        # TODO: Verify!
+        if truncate_vectors_at_length is not None and truncate_vectors_at_length < v_1.shape[1]:
+            v_1 = v_1[:, :truncate_vectors_at_length]
+            v_2 = v_2[:, :truncate_vectors_at_length]
+
+        return distance(v_1, v_2, distance_type)
+
+    def distance_between_multigrams(self, multigram_1, multigram_2,
+                                    distance_type: DistanceType,
+                                    combinator_type: VectorCombinatorType,
+                                    truncate_vectors_at_length: int = None) -> float:
+        """
+        Returns the distance between the two specified multigrams, using a multiword combinator
+        :param multigram_1:
+        :param multigram_2:
+        :param distance_type:
+        :param combinator_type:
+        :param truncate_vectors_at_length:
+        :return:
+        :raises: WordNotFoundError
+        """
+        # Unnecessarily functional-programming way of combining unigram vectors for ngrams.
+        v_1 = reduce(
+            partial(multiword_combinator, combinator_type=combinator_type),
+            [numpy.array(self.vector_for_word(word)) for word in ngram_to_unigrams(multigram_1)])
+        v_2 = reduce(
+            partial(multiword_combinator, combinator_type=combinator_type),
+            [numpy.array(self.vector_for_word(word)) for word in ngram_to_unigrams(multigram_2)])
 
         # TODO: The vectors that come out of word2vec may not be like this, in which case this won't work.
         # TODO: Verify!
