@@ -18,7 +18,7 @@ caiwingfield.net
 import json
 import os
 import logging
-from typing import List, Dict
+from typing import List, Dict, Iterable
 
 import nltk
 
@@ -125,9 +125,14 @@ class FreqDist(nltk.probability.FreqDist):
             rank = self.most_common().index((token, freq))
             return rank
 
-    def most_common_tokens(self, top_n) -> List:
+    def most_common_tokens(self, top_n: int = None) -> List[str]:
         """A list of the most common tokens, in order."""
-        return [word for word, _ in self.most_common(top_n)]
+        return list(self.iter_most_common_tokens(top_n))
+
+    def iter_most_common_tokens(self, top_n: int = None) -> Iterable[str]:
+        """Iterates the most common tokens, in order."""
+        for word, _ in self.most_common(top_n):
+            yield word
 
     @classmethod
     def from_batched_corpus(cls, batched_corpus: BatchedCorpus) -> 'FreqDist':
