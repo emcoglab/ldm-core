@@ -21,6 +21,7 @@ import nltk
 import numpy
 from numpy import log
 from scipy import spatial
+from scipy.spatial.distance import minkowski
 from scipy.special import beta as beta_function
 from scipy.stats import beta as beta_distribution
 
@@ -52,6 +53,7 @@ class DistanceType(Enum):
     correlation = auto()
     cosine      = auto()
     Euclidean   = auto()
+    Minkowski3  = auto()
 
     @property
     def name(self) -> str:
@@ -64,19 +66,23 @@ class DistanceType(Enum):
             return "cosine"
         elif self is DistanceType.correlation:
             return "correlation"
+        elif self is DistanceType.Minkowski3:
+            return "Minkowski-3"
         else:
             raise ValueError()
 
     @classmethod
     def from_name(cls, name: str) -> 'DistanceType':
         """Get a distance type from a name."""
-        name = name.lower()
+        name = name.lower().replace("_", "-")
         if name == "euclidean":
             return cls.Euclidean
         elif name == "cosine":
             return cls.cosine
         elif name == "correlation":
             return cls.correlation
+        elif name == "minkowski-3":
+            return cls.Minkowski3
         else:
             raise NotImplementedError(name)
 
@@ -92,6 +98,8 @@ def distance(u: numpy.ndarray, v: numpy.ndarray, distance_type: DistanceType) ->
         return _cosine_distance(u, v)
     elif distance_type is DistanceType.correlation:
         return _correlation_distance(u, v)
+    elif distance_type is DistanceType.Minkowski3:
+        return _minkowski_distance(u, v, 3)
     else:
         raise ValueError()
 
@@ -125,6 +133,17 @@ def _correlation_distance(u: numpy.ndarray, v: numpy.ndarray):
     """
     r = numpy.corrcoef(u, v)[0, 1]
     return 1 - r
+
+
+def _minkowski_distance(u, v, p):
+    """
+    Minkowski distance
+    :param u:
+    :param v:
+    :param p:
+    :return:
+    """
+    return minkowski(u, v, p)
 
 
 def sparse_max(a, b):
