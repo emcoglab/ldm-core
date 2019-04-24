@@ -17,12 +17,14 @@ def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_lengt
         bar_length  - Optional  : character length of bar (Int)
     """
     str_format = "{0:." + str(decimals) + "f}"
-    percents = str_format.format(100 * (iteration / float(total)))
-    filled_length = int(round(bar_length * iteration / float(total)))
+    portion_complete = iteration/float(total)
+    percents = str_format.format(100 * portion_complete)
+    filled_length = int(round(bar_length * portion_complete))
     bar = '█' * filled_length + '-' * (bar_length - filled_length)
 
-    stdout.write('\r%s |%s| %s%s %s' % (prefix, bar, percents, '%', suffix)),
+    stdout.write(f'\r{prefix}|{bar}| {percents}%{suffix}'),
 
     if iteration == total:
         stdout.write('\n')
+
     stdout.flush()
