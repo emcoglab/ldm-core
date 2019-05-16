@@ -16,6 +16,7 @@ caiwingfield.net
 """
 
 from enum import Enum, auto
+from functools import reduce
 from typing import List
 
 
@@ -56,6 +57,7 @@ class VectorCombinatorType(Enum):
 
     additive = auto()
     multiplicative = auto()
+    mean = auto()
     none = auto()
 
     @property
@@ -64,18 +66,32 @@ class VectorCombinatorType(Enum):
             return "additive"
         elif self is self.multiplicative:
             return "multiplicative"
+        elif self is self.mean:
+            return "mean"
         elif self is self.none:
             return "none"
         else:
             raise ValueError()
 
 
-def multiword_combinator(v, w, combinator_type):
-    """Implementation for each way of combining vectors or scalars."""
+def multiword_combinator(combinator_type: VectorCombinatorType, *vectors):
+    """
+    Implementation for each way of combining vectors .
+    :param combinator_type:
+        The type of combination to perform.
+    :param vectors:
+        argument list of vectors to combine.
+    :return:
+    """
     if combinator_type is VectorCombinatorType.additive:
-        return v + w
+        # As + is associative we can use binary reduction here
+        return reduce(lambda v, w: v + w, vectors)
     elif combinator_type is VectorCombinatorType.multiplicative:
-        return v * w
+        # As * is associative we can use binary reduction here
+        return reduce(lambda v, w: v * w, vectors)
+    elif combinator_type is VectorCombinatorType.mean:
+        # Binary mean is not associative, so we have to add first and then divide.
+        return multiword_combinator(VectorCombinatorType.additive, *vectors) / len(vectors)
     elif combinator_type is VectorCombinatorType.none:
         return NotImplementedError()
     else:

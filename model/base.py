@@ -17,17 +17,15 @@ caiwingfield.net
 
 import logging
 import os
-
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
-from functools import reduce, partial
 
 import numpy
 
 from ..corpus.corpus import CorpusMetadata
 from ..corpus.multiword import VectorCombinatorType, multiword_combinator, ngram_to_unigrams
-from ..utils.maths import DistanceType, distance
 from ..preferences.preferences import Preferences
+from ..utils.maths import DistanceType, distance
 
 logger = logging.getLogger(__name__)
 
@@ -554,12 +552,10 @@ class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
         :raises: WordNotFoundError
         """
         # Unnecessarily functional-programming way of combining unigram vectors for ngrams.
-        v_1 = reduce(
-            partial(multiword_combinator, combinator_type=combinator_type),
-            [numpy.array(self.vector_for_word(word)) for word in ngram_to_unigrams(multigram_1)])
-        v_2 = reduce(
-            partial(multiword_combinator, combinator_type=combinator_type),
-            [numpy.array(self.vector_for_word(word)) for word in ngram_to_unigrams(multigram_2)])
+        v_1 = multiword_combinator(combinator_type, *tuple(numpy.array(self.vector_for_word(word))
+                                                           for word in ngram_to_unigrams(multigram_1)))
+        v_2 = multiword_combinator(combinator_type, *tuple(numpy.array(self.vector_for_word(word))
+                                                           for word in ngram_to_unigrams(multigram_2)))
 
         # TODO: The vectors that come out of word2vec may not be like this, in which case this won't work.
         # TODO: Verify!
