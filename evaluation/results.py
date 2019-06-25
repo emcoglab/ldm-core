@@ -14,6 +14,9 @@ caiwingfield.net
 2017
 ---------------------------
 """
+
+from __future__ import annotations
+
 import os
 import pickle
 import logging
@@ -129,7 +132,7 @@ class EvaluationResults(metaclass=ABCMeta):
     def _previously_saved_csv(self) -> bool:
         return os.path.isfile(self._csv_path)
 
-    def load(self) -> 'EvaluationResults':
+    def load(self) -> EvaluationResults:
         """
         Load previously saved data.
         Returns self for method chaining.

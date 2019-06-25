@@ -15,6 +15,8 @@ caiwingfield.net
 ---------------------------
 """
 
+from __future__ import annotations
+
 import json
 import os
 import logging
@@ -100,7 +102,7 @@ class FreqDist(nltk.probability.FreqDist):
                       separators=(',', ':'))
 
     @classmethod
-    def load(cls, filename: str) -> 'FreqDist':
+    def load(cls, filename: str) -> FreqDist:
         """Load the FreqDist from a file."""
         if not filename.endswith(FreqDist._file_extension):
             filename += FreqDist._file_extension
@@ -135,7 +137,7 @@ class FreqDist(nltk.probability.FreqDist):
             yield word
 
     @classmethod
-    def from_batched_corpus(cls, batched_corpus: BatchedCorpus) -> 'FreqDist':
+    def from_batched_corpus(cls, batched_corpus: BatchedCorpus) -> FreqDist:
         # Initially create an empty FreqDist
         freq_dist = cls()
         # Then add to it from each batch of the corpus.

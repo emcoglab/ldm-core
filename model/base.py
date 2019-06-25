@@ -15,6 +15,8 @@ caiwingfield.net
 ---------------------------
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from abc import ABCMeta, abstractmethod
@@ -255,7 +257,7 @@ class DistributionalSemanticModel(metaclass=ABCMeta):
                 raise ValueError()
 
         @classmethod
-        def from_slug(cls, slug: str) -> 'DistributionalSemanticModel.ModelType':
+        def from_slug(cls, slug: str) -> DistributionalSemanticModel.ModelType:
             """
             Get the model type from the slug.
             """

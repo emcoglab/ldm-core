@@ -15,6 +15,8 @@ caiwingfield.net
 ---------------------------
 """
 
+from __future__ import annotations
+
 from enum import Enum, auto
 
 import nltk
@@ -72,7 +74,7 @@ class DistanceType(Enum):
             raise ValueError()
 
     @classmethod
-    def from_name(cls, name: str) -> 'DistanceType':
+    def from_name(cls, name: str) -> DistanceType:
         """Get a distance type from a name."""
         name = name.lower().replace("_", "-")
         if name == "euclidean":
