@@ -55,7 +55,7 @@ corpora:
   # subtitles
   subtitles-raw:
     name:  "BBC"
-    path:  "/Volumes/Data/corpora/BBC/0 XML version"
+    path:  "/Volumes/Data/corpora/BBC/0 Raw"
   subtitles-no-srt:
     name:  "BBC"
     path:  "/Volumes/Data/corpora/BBC/1 No srt formatting"
@@ -68,7 +68,7 @@ corpora:
   # ukwac
   ukwac-raw:
     name: "UKWAC"
-    path: "/Volumes/Data/corpora/UKWAC/0 Raw untagged/cleaned_pre.pcorpus"
+    path: "/Volumes/Data/corpora/UKWAC/0 Raw untagged/cleaned_pre.pos.corpus"
   ukwac-no-urls:
     name: "UKWAC"
     path: "/Volumes/Data/corpora/UKWAC/1 Text only/cleaned_pre.pcorpus"
