@@ -1,7 +1,7 @@
-gensim
-nltk
-numpy
-pandas
-pyyaml
-scipy
-statsmodels
+gensim==2.2.0
+nltk==3.2.5
+numpy==1.16.4
+pandas==0.24.2
+pyyaml==3.12
+scipy==1.3.0
+statsmodels==0.10.0
