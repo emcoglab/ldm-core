@@ -282,7 +282,16 @@ def binomial_bayes_factor(n, k, p0, alternative_hypothesis="≠", a=1, b=1):
 
 
 def clamp01(x):
-    """
-    Bounds a value between 0 and 1.
-    """
-    return max(0, min(1, x))
+    """Bounds a value between 0 and 1."""
+    return clamp(x, minimum=0, maximum=1)
+
+
+def clamp(value, minimum=None, maximum=None):
+    """Bounds a value between minimum and maximum."""
+    if minimum is None:
+        if maximum is None:
+            return value
+        return min(maximum, value)
+    if maximum is None:
+        return max(minimum, value)
+    return max(minimum, min(maximum, value))
