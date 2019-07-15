@@ -94,13 +94,13 @@ def distance(u: numpy.ndarray, v: numpy.ndarray, distance_type: DistanceType) ->
     Distance from vector u to vector v using the specified distance type.
     """
 
-    if distance_type is DistanceType.Euclidean:
+    if distance_type == DistanceType.Euclidean:
         return _euclidean_distance(u, v)
-    elif distance_type is DistanceType.cosine:
+    elif distance_type == DistanceType.cosine:
         return _cosine_distance(u, v)
-    elif distance_type is DistanceType.correlation:
+    elif distance_type == DistanceType.correlation:
         return _correlation_distance(u, v)
-    elif distance_type is DistanceType.Minkowski3:
+    elif distance_type == DistanceType.Minkowski3:
         return _minkowski_distance(u, v, 3)
     else:
         raise ValueError()
