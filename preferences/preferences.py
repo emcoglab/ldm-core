@@ -138,7 +138,7 @@ class Preferences:
     thematic_association_path = path.join(test_dir, "Thematic relatedness", "13428_2015_679_MOESM2_ESM (corrected).csv")
 
     # Semantic priming data
-    spp_path_xls              = path.join(test_dir, "SPP", "Hutchinson et al. (2013) SPP BrEng & substitutions.xls")  # Semantic priming data: source xls file
+    spp_path_csv              = path.join(test_dir, "SPP", "Hutchison et al. (2013) SPP combined.csv")  # Semantic priming data: source csv file
     spp_elexicon_csv          = path.join(test_dir, "SPP", "elexicon", "I148613.csv")  # Additional Elexicon predictors csv
     mandera_distances_csv     = path.join(test_dir, "Spp", "mandera", "mandera_cosine_cbow300_r6_ukwacsubtitles.csv")  # Distances computed from Brysbaert's SNAUT
 
@@ -153,7 +153,7 @@ class Preferences:
     synonym_results_dir       = path.join(results_dir, "synonyms/")
     association_results_dir   = path.join(results_dir, "association/")
     spp_results_dir           = path.join(results_dir, "SPP/")
-    spp_path_pickle           = path.join(spp_results_dir, "Hutchinson et al. (2013) SPP.pickle")  # Semantic priming data: pickled version for faster loading
+    spp_path_pickle           = path.join(spp_results_dir, "Hutchison et al. (2013) SPP.pickle")  # Semantic priming data: pickled version for faster loading
     calgary_results_dir       = path.join(results_dir, "Calgary/")
     calgary_path_pickle       = path.join(calgary_results_dir, "13428_2016_720_MOESM2_ESM.pickle")
 

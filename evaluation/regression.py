@@ -233,7 +233,7 @@ class SppData(RegressionData):
 
     @classmethod
     def _load_from_source(cls) -> pandas.DataFrame:
-        prime_target_data: pandas.DataFrame = pandas.read_csv(Preferences.spp_path_xls, header=0)
+        prime_target_data: pandas.DataFrame = pandas.read_csv(Preferences.spp_path_csv, header=0)
 
         # Convert all to strings (to avoid False becoming a bool 😭)
         prime_target_data["TargetWord"] = prime_target_data["TargetWord"].apply(str)
