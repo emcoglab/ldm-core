@@ -90,10 +90,10 @@ models:
 
 # Locations of files relevant to tests
 tests:
-  directory: "/Volumes/Data/evaluation/tests/"
+  directory: "/Volumes/Data/ldm evaluation/tests/"
 
 # Locations of results to be saved
 results:
-  directory: "/Volumes/Data/evaluation/results/"
-  figures-directory: "/Volumes/Data/evaluation/figures/"
-  summary-directory: "/Volumes/Data/evaluation/summary"
+  directory: "/Volumes/Data/ldm evaluation/results/"
+  figures-directory: "/Volumes/Data/ldm evaluation/figures/"
+  summary-directory: "/Volumes/Data/ldm evaluation/summary"
