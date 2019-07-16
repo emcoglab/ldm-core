@@ -2,6 +2,6 @@ gensim==2.2.0
 nltk==3.2.5
 numpy==1.16.4
 pandas==0.24.2
-pyyaml==3.12
+pyyaml==5.1
 scipy>=0.19.0 # 0.19.0 minimum requirement for v2.2.0 of gensim; 1.2.0 is max requirement
 statsmodels==0.10.0
