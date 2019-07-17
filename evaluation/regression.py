@@ -46,12 +46,12 @@ class RegressionData(metaclass=ABCMeta):
                  save_progress: bool = True,
                  force_reload:  bool = False):
 
-        self.name = name
+        self.name: str = name
 
-        self._pickle_path = pickle_path
-        self._results_dir = results_dir
+        self._pickle_path: str = pickle_path
+        self._results_dir: str = results_dir
 
-        self._save_progress = save_progress
+        self._save_progress: bool = save_progress
 
         # self._all_data backs self.dataframe
         # Load data if possible
@@ -244,6 +244,11 @@ class SppData(RegressionData):
         prime_target_data["TargetWord"] = prime_target_data["TargetWord"].str.lower()
         prime_target_data["PrimeWord"] = prime_target_data["PrimeWord"].str.lower()
         prime_target_data["MatchedPrime"] = prime_target_data["MatchedPrime"].str.lower()
+
+        # For unrelated pairs, the Matched Prime column will now have the string "nan".
+        # There are no legitimate cases of "nan" as a matched prime.
+        # So we go through and remove this.
+        prime_target_data["MatchedPrime"].replace("nan", numpy.nan, inplace=True)
 
         return prime_target_data
 
