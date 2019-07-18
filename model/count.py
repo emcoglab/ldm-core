@@ -96,7 +96,7 @@ class CountVectorModel(VectorSemanticModel):
             word_id = self.token_index.token2id[word]
             return self.vector_for_id(word_id)
         except KeyError:
-            raise WordNotFoundError(f"The word '{word}' was not found.")
+            raise WordNotFoundError(f"The word {word!r} was not found.")
 
     def nearest_neighbours(self, word: str, distance_type: DistanceType, n: int, only_consider_most_frequent: int = None):
 
@@ -108,7 +108,7 @@ class CountVectorModel(VectorSemanticModel):
             vocab_size = len(self.token_index.id2token)
 
         if not self.contains_word(word):
-            raise WordNotFoundError(f"The word '{word}' was not found.")
+            raise WordNotFoundError(f"The word {word!r} was not found.")
 
         target_id = self.token_index.token2id[word]
         target_vector = self.vector_for_id(target_id)
@@ -193,7 +193,7 @@ class CountScalarModel(ScalarSemanticModel, metaclass=ABCMeta):
     def scalar_for_word(self, word: str):
 
         if not self.contains_word(word):
-            raise WordNotFoundError(f"The word '{word}' was not found.")
+            raise WordNotFoundError(f"The word {word!r} was not found.")
 
         return self._model[self.token_index.token2id[word]]
 
