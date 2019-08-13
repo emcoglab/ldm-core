@@ -15,15 +15,17 @@ caiwingfield.net
 ---------------------------
 """
 
-import logging
 import os
-import pickle
 import re
+import logging
+import pickle
 from abc import ABCMeta, abstractmethod
 from typing import List, Set, Optional
 
-import numpy
-import pandas
+from numpy import nan, exp, log10
+from pandas import DataFrame, read_csv, merge, ExcelFile, Series
+from statsmodels.regression.linear_model import OLS
+from statsmodels.tools import add_constant
 
 from ..model.base import VectorSemanticModel, DistributionalSemanticModel
 from ..model.ngram import NgramModel
@@ -71,10 +73,10 @@ class RegressionData(metaclass=ABCMeta):
             self.save()
 
     @property
-    def dataframe(self) -> pandas.DataFrame:
+    def dataframe(self) -> DataFrame:
         return self._all_data
 
-    def _load(self) -> pandas.DataFrame:
+    def _load(self) -> DataFrame:
         """
         Load previously saved data.
         """
@@ -105,12 +107,11 @@ class RegressionData(metaclass=ABCMeta):
         with open(self._csv_path, mode="w", encoding="utf-8") as results_file:
             self.dataframe.to_csv(results_file, index=False)
 
-    def _load_from_csv(self) -> pandas.DataFrame:
+    def _load_from_csv(self) -> DataFrame:
         """
         Load previously saved data from a CSV.
         """
-        df = pandas.read_csv(self._csv_path, header=0, index_col=None,
-                             dtype={"Word": str})
+        df = read_csv(self._csv_path, header=0, index_col=None, dtype={"Word": str})
         return df
 
     @property
@@ -128,7 +129,7 @@ class RegressionData(metaclass=ABCMeta):
         return os.path.isfile(self._csv_path)
 
     @abstractmethod
-    def _load_from_source(self) -> pandas.DataFrame:
+    def _load_from_source(self) -> DataFrame:
         """
         Load data from the source data file, dealing with errors in source material.
         """
@@ -174,10 +175,12 @@ class RegressionData(metaclass=ABCMeta):
         """
         return predictor_name in self.dataframe.columns.values
 
-    def add_word_keyed_predictor(self, predictor: pandas.DataFrame, key_name: str, predictor_name: str):
+    def add_word_keyed_predictor(self, predictor: DataFrame, key_name: str, predictor_name: str):
         """
         Adds a word-keyed predictor column.
-        :param predictor: Should have a column named `key_name`, used to left-join with the main dataframe, and a column named `predictor_name`, containing the actual values..
+        :param predictor:
+         Should have a column named `key_name`, used to left-join with the main dataframe, and a column named
+         `predictor_name`, containing the actual values.
         :param predictor_name:
         :param key_name:
         :return:
@@ -188,18 +191,18 @@ class RegressionData(metaclass=ABCMeta):
             logger.info(f"Predictor '{predictor_name} already exists")
             return
 
-        self._all_data = pandas.merge(self.dataframe, predictor, on=key_name, how="left")
+        self._all_data = merge(self.dataframe, predictor, on=key_name, how="left")
 
         # Save in current state
         if self._save_progress:
             self.save()
 
-    def add_word_pair_keyed_predictor(self, predictor: pandas.DataFrame, merge_on):
+    def add_word_pair_keyed_predictor(self, predictor: DataFrame, merge_on):
         """
         Adds a predictor column keyed from a prime-target pair.
         """
 
-        self._all_data = pandas.merge(self.dataframe, predictor, on=merge_on, how="left")
+        self._all_data = merge(self.dataframe, predictor, on=merge_on, how="left")
 
         # Save in current state
         if self._save_progress:
@@ -226,14 +229,15 @@ class SppData(RegressionData):
         :param path: Save to specified path, else use default in Preferences.
         """
         assert self._all_data is not None
-        results_csv_path = path if (path is not None) else os.path.join(self._results_dir, "model_predictors_first_associate_only.csv")
+        results_csv_path = path if (path is not None) else os.path.join(self._results_dir,
+                                                                        "model_predictors_first_associate_only.csv")
         first_assoc_data = self._all_data.query('PrimeType == "first_associate"')
         with open(results_csv_path, mode="w", encoding="utf-8") as results_file:
             first_assoc_data.to_csv(results_file)
 
     @classmethod
-    def _load_from_source(cls) -> pandas.DataFrame:
-        prime_target_data: pandas.DataFrame = pandas.read_csv(Preferences.spp_path_csv, header=0)
+    def _load_from_source(cls) -> DataFrame:
+        prime_target_data: DataFrame = read_csv(Preferences.spp_path_csv, header=0)
 
         # Convert all to strings (to avoid False becoming a bool 😭)
         prime_target_data["TargetWord"] = prime_target_data["TargetWord"].apply(str)
@@ -248,7 +252,7 @@ class SppData(RegressionData):
         # For unrelated pairs, the Matched Prime column will now have the string "nan".
         # There are no legitimate cases of "nan" as a matched prime.
         # So we go through and remove this.
-        prime_target_data["MatchedPrime"].replace("nan", numpy.nan, inplace=True)
+        prime_target_data["MatchedPrime"].replace("nan", nan, inplace=True)
 
         return prime_target_data
 
@@ -313,7 +317,8 @@ class SppData(RegressionData):
 
             if for_priming_effect:
                 # Make sure the non-priming model predictor exists already, as we'll be referencing it
-                assert self.predictor_exists_with_name(self.predictor_name_for_model(model, distance_type, for_priming_effect=False))
+                assert self.predictor_exists_with_name(self.predictor_name_for_model(model, distance_type,
+                                                                                     for_priming_effect=False))
 
             def model_association_or_none(word_pair):
                 """
@@ -383,11 +388,11 @@ class CalgaryData(RegressionData):
         self._add_response_columns()
 
     @classmethod
-    def _load_from_source(cls) -> pandas.DataFrame:
+    def _load_from_source(cls) -> DataFrame:
         """
         Load data from excel file, dealing with errors in source material.
         """
-        xls = pandas.ExcelFile(Preferences.calgary_path_xlsx)
+        xls = ExcelFile(Preferences.calgary_path_xlsx)
         word_data = xls.parse("Sheet1")
 
         # Convert all to strings (to avoid False becoming a bool 😭)
@@ -407,7 +412,8 @@ class CalgaryData(RegressionData):
             # If the word is Brysbaert-concrete, the accuracy equals the fraction of responders who decided "concrete"
             if r["WordType"] == "Concrete":
                 return r["ACC"]
-            # If the word is Brysbaert-abstract, the complement of the accuracy equals the fraction of responders who decided "concrete"
+            # If the word is Brysbaert-abstract, the complement of the accuracy equals the fraction of responders who
+            # decided "concrete"
             else:
                 return 1 - r["ACC"]
 
@@ -502,7 +508,10 @@ class CalgaryData(RegressionData):
         Assumes that columns containing reference word distances already exist.
         """
 
-        reference_predictor_names = [self.predictor_name_for_model_fixed_reference(model, distance_type, reference_word) for reference_word in self.reference_words]
+        reference_predictor_names = [
+            self.predictor_name_for_model_fixed_reference(model, distance_type, reference_word)
+            for reference_word in self.reference_words
+        ]
         min_predictor_name = self.predictor_name_for_model_min_distance(model, distance_type)
 
         # Skip existing predictors
@@ -607,7 +616,7 @@ class RegressionResult(object):
                  model_t: float,
                  model_p: float,
                  model_beta: float,
-                 df: int
+                 df: int,
                  ):
 
         # Dependent variable
@@ -629,10 +638,10 @@ class RegressionResult(object):
         # Bayes information criteria and Bayes factors
         self.baseline_bic     = baseline_bic
         self.model_bic        = model_bic
-        self.b10_approx       = numpy.exp((baseline_bic - model_bic) / 2)
+        self.b10_approx       = exp((baseline_bic - model_bic) / 2)
         # Sometimes when BICs get big, B10 ends up at inf; but it's approx log10 should be finite
         # (and useful for ordering as log is monotonic increasing)
-        self.b10_log_fallback = ((baseline_bic - model_bic) / 2) * numpy.log10(numpy.exp(1))
+        self.b10_log_fallback = ((baseline_bic - model_bic) / 2) * log10(exp(1))
 
         # t, p, beta
         self.model_t          = model_t
@@ -665,7 +674,7 @@ class RegressionResult(object):
             't',
             'p',
             'beta',
-            'df'
+            'df',
         ]
 
     @property
@@ -687,5 +696,5 @@ class RegressionResult(object):
             str(self.model_t),
             str(self.model_p),
             str(self.model_beta),
-            str(self.df)
+            str(self.df),
         ]
