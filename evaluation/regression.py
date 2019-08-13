@@ -24,6 +24,7 @@ from typing import List, Set, Optional
 
 from numpy import nan, exp, log10
 from pandas import DataFrame, read_csv, merge, ExcelFile, Series
+from statsmodels.base.model import Model
 from statsmodels.regression.linear_model import OLS
 from statsmodels.tools import add_constant
 
@@ -617,7 +618,7 @@ class RegressionResult(object):
                  model_p: float,
                  model_beta: float,
                  df: int,
-                 ):
+                 vifs: Series):
 
         # Dependent variable
         self.dv_name          = dv_name
@@ -651,6 +652,9 @@ class RegressionResult(object):
         # Degrees of freedom
         self.df               = df
 
+        # Variance inflation factors
+        self.vifs             = vifs
+
     @property
     def model_r2_increase(self) -> float:
         return self.model_r2 - self.baseline_r2
@@ -675,6 +679,7 @@ class RegressionResult(object):
             'p',
             'beta',
             'df',
+            'vifs',
         ]
 
     @property
@@ -697,4 +702,26 @@ class RegressionResult(object):
             str(self.model_p),
             str(self.model_beta),
             str(self.df),
+            str(self.vifs),
         ]
+
+
+def variance_inflation_factors(exog: DataFrame):
+    """
+    Compute variance inflation factors from a design matrix.
+
+    :param:
+        exog : DataFrame, (nobs, k_vars)
+            Design matrix with all explanatory variables, as for example used in regression.
+    :return:
+        vifs : Series
+    """
+    exog = add_constant(exog)
+    vifs = Series(
+        [1.1 / (1.0 - OLS(exog[col].values,
+                          exog.loc[:, exog.columns != col].values).fit().rsquared)
+         for col in exog],
+        index=exog.columns,
+        name='VIF'
+    )
+    return vifs
