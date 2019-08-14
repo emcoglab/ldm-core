@@ -618,7 +618,8 @@ class RegressionResult(object):
                  model_p: float,
                  model_beta: float,
                  df: int,
-                 vifs: Series):
+                 max_vif: float,
+                 max_vif_predictor: str):
 
         # Dependent variable
         self.dv_name          = dv_name
@@ -652,8 +653,9 @@ class RegressionResult(object):
         # Degrees of freedom
         self.df               = df
 
-        # Variance inflation factors
-        self.vifs             = vifs
+        # Variance inflation diagnostics
+        self.max_vif             = max_vif
+        self.max_vif_predictor   = max_vif_predictor
 
     @property
     def model_r2_increase(self) -> float:
@@ -679,7 +681,8 @@ class RegressionResult(object):
             'p',
             'beta',
             'df',
-            'vifs',
+            'max vif',
+            'max vif predictor'
         ]
 
     @property
@@ -702,7 +705,8 @@ class RegressionResult(object):
             str(self.model_p),
             str(self.model_beta),
             str(self.df),
-            str(self.vifs),
+            str(self.max_vif),
+            self.max_vif_predictor,
         ]
 
 
@@ -714,7 +718,7 @@ def variance_inflation_factors(exog: DataFrame):
         exog : DataFrame, (nobs, k_vars)
             Design matrix with all explanatory variables, as for example used in regression.
     :return:
-        vifs : Series
+        max_vif : Series
     """
     exog = add_constant(exog)
     vifs = Series(
