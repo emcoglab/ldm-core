@@ -15,16 +15,15 @@ caiwingfield.net
 ---------------------------
 """
 
-import os
-import re
 import logging
+import os
 import pickle
+import re
 from abc import ABCMeta, abstractmethod
 from typing import List, Set, Optional
 
 from numpy import nan, exp, log10
 from pandas import DataFrame, read_csv, merge, ExcelFile, Series
-from statsmodels.base.model import Model
 from statsmodels.regression.linear_model import OLS
 from statsmodels.tools import add_constant
 
@@ -99,13 +98,16 @@ class RegressionData(metaclass=ABCMeta):
         """
         return os.path.join(self._results_dir, "model_predictors.csv")
 
-    def _export_csv(self):
+    def export_csv(self, path: str = None):
         """
         Export the current dataframe as a csv.
         """
         assert self._all_data is not None
 
-        with open(self._csv_path, mode="w", encoding="utf-8") as results_file:
+        if path is None:
+            path = self._csv_path
+
+        with open(path, mode="w", encoding="utf-8") as results_file:
             self.dataframe.to_csv(results_file, index=False)
 
     def _load_from_csv(self) -> DataFrame:
@@ -144,7 +146,7 @@ class RegressionData(metaclass=ABCMeta):
             logger.warning("Tried to save progress with save_progress set to False. Not saving.")
             return
         self._save_pickle()
-        self._export_csv()
+        self.export_csv()
 
     @property
     @abstractmethod
@@ -230,8 +232,7 @@ class SppData(RegressionData):
         :param path: Save to specified path, else use default in Preferences.
         """
         assert self._all_data is not None
-        results_csv_path = path if (path is not None) else os.path.join(self._results_dir,
-                                                                        "model_predictors_first_associate_only.csv")
+        results_csv_path = path if path is not None else os.path.join(self._results_dir, "model_predictors_first_associate_only.csv")
         first_assoc_data = self._all_data.query('PrimeType == "first_associate"')
         with open(results_csv_path, mode="w", encoding="utf-8") as results_file:
             first_assoc_data.to_csv(results_file)
