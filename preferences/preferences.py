@@ -158,6 +158,7 @@ class Preferences:
     calgary_path_pickle       = path.join(calgary_results_dir, "13428_2016_720_MOESM2_ESM.pickle")
 
     mandera_results_csv       = path.join(spp_results_dir, "mandera_regression.csv")
+    mandera_results_fa_csv    = path.join(spp_results_dir, "mandera_regression_first_assoc.csv")
 
     # FIGURES
 
