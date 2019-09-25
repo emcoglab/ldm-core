@@ -21,6 +21,7 @@ import logging
 import os
 from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
+from typing import List, Tuple
 
 import numpy
 
@@ -496,14 +497,33 @@ class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
         """
         raise NotImplementedError()
 
-    @abstractmethod
-    def nearest_neighbours(self, word: str, distance_type: DistanceType, n: int, only_consider_most_frequent: int = None):
+    def nearest_neighbours(self, word: str, distance_type: DistanceType, n: int, only_consider_most_frequent: int = None) -> List[str]:
         """
         Finds the nearest neighbours to a word.
         :param word:
         :param distance_type:
         :param n:
         :param only_consider_most_frequent: Set to None to consider all, otherwise only consider n most frequent words
+        """
+        return [
+            # Just the word
+            sdpair[0]
+            for sdpair in self.nearest_neighbours_with_distances(
+                word=word,
+                distance_type=distance_type,
+                n=n,
+                only_consider_most_frequent=only_consider_most_frequent)
+        ]
+
+    @abstractmethod
+    def nearest_neighbours_with_distances(self, word: str, distance_type: DistanceType, n: int, only_consider_most_frequent: int = None) -> List[Tuple[str, float]]:
+        """
+        Finds the nearest neighbours to a word.
+        :param word:
+        :param distance_type:
+        :param n:
+        :param only_consider_most_frequent: Set to None to consider all, otherwise only consider n most frequent words
+        :return Ordered list of word–distance pairs.
         """
         raise NotImplementedError()
 

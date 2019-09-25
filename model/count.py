@@ -21,8 +21,8 @@ from abc import abstractmethod, ABCMeta
 from operator import itemgetter
 from os import path, makedirs
 
-import numpy
-import scipy.sparse
+from numpy import array, savez, load as np_load, log2, log10, sum as np_sum, squeeze, asarray, diff
+from scipy.sparse import issparse, csr_matrix, save_npz, lil_matrix
 
 from .base import VectorSemanticModel, DistributionalSemanticModel, ScalarSemanticModel
 from ..corpus.corpus import CorpusMetadata, WindowedCorpus
@@ -50,7 +50,7 @@ class CountVectorModel(VectorSemanticModel):
         self.token_index: TokenIndex = TokenIndex.from_freqdist_ranks(freq_dist)
 
     @property
-    def matrix(self) -> scipy.sparse.csr_matrix:
+    def matrix(self) -> csr_matrix:
         return self._model
 
     @property
@@ -67,7 +67,7 @@ class CountVectorModel(VectorSemanticModel):
         if not path.isdir(self.save_dir):
             logger.warning(f"{self.save_dir} does not exist, making it.")
             makedirs(self.save_dir)
-        scipy.sparse.save_npz(path.join(self.save_dir, self._model_filename_with_ext), self._model, compressed=False)
+        save_npz(path.join(self.save_dir, self._model_filename_with_ext), self._model, compressed=False)
 
     # BUG: This appears to leak memory if used repeatedly :[
     def _load(self, memory_map: bool = False):
@@ -168,7 +168,7 @@ class CountScalarModel(ScalarSemanticModel, metaclass=ABCMeta):
         return ".npz"
 
     @property
-    def vector(self) -> numpy.ndarray:
+    def vector(self) -> array:
         return self._model
 
     def _save(self):
@@ -180,14 +180,14 @@ class CountScalarModel(ScalarSemanticModel, metaclass=ABCMeta):
         # So just use numpy savez
         #     https://stackoverflow.com/questions/31468117/python-3-can-pickle-handle-byte-objects-larger-than-4gb
         #     https://github.com/numpy/numpy/issues/3858
-        numpy.savez(path.join(self.save_dir, self._model_filename_with_ext), self._model)
+        savez(path.join(self.save_dir, self._model_filename_with_ext), self._model)
 
     def _load(self, memory_map: bool = False):
 
         if memory_map:
             logger.warning(f"Memory mapping not currently supported for Vector models")
 
-        self._model = numpy.load(path.join(self.save_dir, self._model_filename_with_ext))["arr_0"]
+        self._model = np_load(path.join(self.save_dir, self._model_filename_with_ext))["arr_0"]
         assert self.is_trained
 
     def scalar_for_word(self, word: str):
@@ -243,7 +243,7 @@ class UnsummedCoOccurrenceCountModel(CountVectorModel):
         # First coordinate points to target word
         # Second coordinate points to context word
         # Use scipy.sparse.lil_matrix for direct indexed access
-        self._model = scipy.sparse.lil_matrix((vocab_size, vocab_size))
+        self._model = lil_matrix((vocab_size, vocab_size))
 
         # We will produce a window which contains EITHER the left or right context, plus the target word (+1)
         window_size = self.window_radius + 1
@@ -307,7 +307,7 @@ class CoOccurrenceCountModel(CountVectorModel):
         vocab_size = len(self.freq_dist)
 
         # Start with an empty sparse matrix
-        self._model = scipy.sparse.csr_matrix((vocab_size, vocab_size))
+        self._model = csr_matrix((vocab_size, vocab_size))
 
         # We load the unsummed cooccurrence matrices in in sequence, and accumulate them to save the summed
         for radius in range(1, self.window_radius + 1):
@@ -349,7 +349,7 @@ class LogCoOccurrenceCountModel(CountVectorModel):
         self._model = ngram_model.matrix
         del ngram_model
         # Apply log to entries in the cooccurrence matrix
-        self._model.data = numpy.log10(self._model.data + 1)
+        self._model.data = log10(self._model.data + 1)
         self._model.eliminate_zeros()
 
 
@@ -412,7 +412,7 @@ class TokenProbabilityModel(CountScalarModel):
 
         # The probability is just the token count, divided by the width of the window and the size of the corpus
         # We're summing over contexts (second dim) to get a count of the targets
-        self._model = numpy.sum(ngram_model.matrix, 1)
+        self._model = np_sum(ngram_model.matrix, 1)
         del ngram_model
         # The width of the window is twice the radius
         # We don't do 2r+1 because we only count the context words, not the target word
@@ -460,9 +460,9 @@ class ConditionalProbabilityModel(CountVectorModel):
         #                                     mx indexed by c on 1st dim
         #
         # According to https://stackoverflow.com/a/12238133/2883198, this is how you do that:
-        self._model.data = self._model.data / token_probability_model.vector.repeat(numpy.diff(self._model.indptr))
+        self._model.data = self._model.data / token_probability_model.vector.repeat(diff(self._model.indptr))
         # The division causes the data to become a 1-d numpy.matrix, so we convert it back into a numpy.ndarray
-        self._model.data = numpy.squeeze(numpy.asarray(self._model.data))
+        self._model.data = squeeze(asarray(self._model.data))
         self._model.eliminate_zeros()
 
 
@@ -492,7 +492,7 @@ class ContextProbabilityModel(CountScalarModel):
 
         # The probability is just the token count, divided by the width of the window and the size of the corpus
         # We're summing over targets (first dim) to get the count of the contexts
-        self._model = numpy.sum(ngram_model.matrix, 0)
+        self._model = np_sum(ngram_model.matrix, 0)
         # The width of the window is twice the radius
         # We don't do 2r+1 because we only count the context words, not the target word
         self._model /= self.window_radius * 2
@@ -547,9 +547,9 @@ class ProbabilityRatioModel(CountVectorModel):
         # corresponding vector element, and we want to divide each column by the corresponding vector element.  We know
         # that the row method is fast, so we'll transpose, divide, transpose back.
         self._model = self._model.transpose().tocsr()
-        self._model.data = self._model.data / context_probability_model.vector.repeat(numpy.diff(self._model.indptr))
+        self._model.data = self._model.data / context_probability_model.vector.repeat(diff(self._model.indptr))
         # The division causes the data to become a 1-d numpy.matrix, so we convert it back into a numpy.ndarray
-        self._model.data = numpy.squeeze(numpy.asarray(self._model.data))
+        self._model.data = squeeze(asarray(self._model.data))
         self._model.eliminate_zeros()
         self._model = self._model.transpose().tocsr()
 
@@ -581,7 +581,7 @@ class PMIModel(CountVectorModel):
         del ratios_model
 
         # PMI model data is log_2 of ratios model data
-        self._model.data = numpy.log2(self._model.data)
+        self._model.data = log2(self._model.data)
         self._model.eliminate_zeros()
 
 
