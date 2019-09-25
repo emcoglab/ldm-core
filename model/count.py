@@ -18,21 +18,27 @@ caiwingfield.net
 import logging
 
 from abc import abstractmethod, ABCMeta
-from operator import itemgetter
 from os import path, makedirs
+from typing import List, Tuple
 
 from numpy import array, savez, load as np_load, log2, log10, sum as np_sum, squeeze, asarray, diff
 from scipy.sparse import issparse, csr_matrix, save_npz, lil_matrix
+from scipy.spatial import distance_matrix as minkowski_distance_matrix
+from scipy.spatial.distance import cdist as distance_matrix
+from sklearn.metrics import pairwise_distances as sparse_pairwise_distances
 
+from ldm.utils.lists import chunks
 from .base import VectorSemanticModel, DistributionalSemanticModel, ScalarSemanticModel
 from ..corpus.corpus import CorpusMetadata, WindowedCorpus
 from ..corpus.indexing import FreqDist, TokenIndex
 from ..utils.constants import Chirality
 from ..utils.exceptions import WordNotFoundError
-from ..utils.maths import DistanceType, distance
+from ..utils.maths import DistanceType
 from ..utils.io import load_npz_with_mmap
 
 logger = logging.getLogger(__name__)
+
+SPARSE_BATCH_SIZE = 100
 
 
 class CountVectorModel(VectorSemanticModel):
@@ -98,49 +104,83 @@ class CountVectorModel(VectorSemanticModel):
         except KeyError:
             raise WordNotFoundError(f"The word {word!r} was not found.")
 
-    def nearest_neighbours(self, word: str, distance_type: DistanceType, n: int, only_consider_most_frequent: int = None):
+    def _distances_for_word(self, word: str, distance_type: DistanceType, only_consider_most_frequent: int = None) -> array:
+        """Vector of distances from the specified word."""
+        vector = self.vector_for_word(word)
 
-        if only_consider_most_frequent is not None:
-            if only_consider_most_frequent < 1:
-                raise ValueError("only_consider_most_frequent must be at least 1")
-            vocab_size = only_consider_most_frequent
+        if issparse(self._model):
+            
+            # Local copy of model for slicing
+            if only_consider_most_frequent is not None:
+                model = self._model[:only_consider_most_frequent, :]
+            else:
+                model = self._model
+
+            # For cosine and euclidean, we can use the sparse matrix
+            if distance_type in [DistanceType.cosine, DistanceType.Euclidean]:
+                distances = squeeze(sparse_pairwise_distances(self.vector_for_word(word), self.matrix, metric=distance_type.name, n_jobs=-1))
+
+            # For correlation and minkowski-3 we can't.
+            # We can't convert self.model to dense as it's BIG (up to 10M), so we chunk self.model up and convert each
+            # chunk to dense.
+            else:
+                distances = []
+                for chunk_idxs in chunks(range(model.shape[0]), SPARSE_BATCH_SIZE):
+                    logger.info(f"\t\tChunk {chunk_idxs[0]:,}–{chunk_idxs[-1]:,}")
+
+                    model_chunk = model[chunk_idxs, :].todense()
+
+                    if distance_type in [DistanceType.cosine, DistanceType.Euclidean, DistanceType.correlation]:
+                        distance_chunk = distance_matrix(vector, model_chunk, metric=distance_type.name)
+                    elif distance_type == DistanceType.Minkowski3:
+                        distance_chunk = minkowski_distance_matrix(vector, model_chunk, 3)
+                    else:
+                        raise NotImplementedError()
+
+                    distances.extend(distance_chunk.squeeze().tolist())
+            return distances
+
         else:
-            vocab_size = len(self.token_index.id2token)
+            # Can just do regular pdists
+
+            if only_consider_most_frequent is not None:
+                if distance_type in [DistanceType.cosine, DistanceType.Euclidean, DistanceType.correlation]:
+                    return distance_matrix(vector, self._model[:only_consider_most_frequent, :], metric=distance_type.name)
+                elif distance_type == DistanceType.Minkowski3:
+                    return minkowski_distance_matrix(vector, self._model[:only_consider_most_frequent, :], 3)
+                else:
+                    raise NotImplementedError()
+
+            else:
+                if distance_type in [DistanceType.cosine, DistanceType.Euclidean, DistanceType.correlation]:
+                    return distance_matrix(vector, self._model, metric=distance_type.name)
+                elif distance_type == DistanceType.Minkowski3:
+                    return minkowski_distance_matrix(vector, self._model, 3)
+                else:
+                    raise NotImplementedError()
+
+    def nearest_neighbours_with_distances(self, word: str, distance_type: DistanceType, n: int, only_consider_most_frequent: int = None) -> List[Tuple[str, float]]:
 
         if not self.contains_word(word):
             raise WordNotFoundError(f"The word {word!r} was not found.")
 
-        target_id = self.token_index.token2id[word]
-        target_vector = self.vector_for_id(target_id)
+        distances = self._distances_for_word(word, distance_type,
+                                             only_consider_most_frequent=only_consider_most_frequent)
 
-        nearest_neighbours = []
+        # Get the indices of the largest and smallest distances
+        nearest_idxs = distances.argsort()
 
-        for candidate_id in range(0, vocab_size):
+        # in case a "nearest neighbour" is itself, we look for and remove that idx.
+        # but we can speed up the search by first truncating down to the nearest N+2 members
+        nearest_idxs = nearest_idxs[:n + 1]
+        nearest_idxs = [i for i in nearest_idxs if not i == self.token_index.token2id[word]]
+        # need to truncate again in case nothing was removed
+        nearest_idxs = nearest_idxs[:n]
 
-            # Skip target word
-            if candidate_id == target_id:
-                continue
+        nearest_neighbours = [(self.token_index.id2token[i], distances[i])
+                              for i in nearest_idxs]
 
-            candidate_vector = self.vector_for_id(candidate_id)
-            distance_to_target = distance(candidate_vector, target_vector, distance_type)
-
-            # Add it to the shortlist
-            nearest_neighbours.append((candidate_id, distance_to_target))
-
-            # If the list is overfull, remove the lowest one
-            if len(nearest_neighbours) > n:
-                nearest_neighbours.sort(
-                    # Sort by distance, which is the second item in the tuple.
-                    key=itemgetter(1),
-                    # Sort ascending so the first element is the most similar
-                    reverse=False)
-                del nearest_neighbours[-1]
-
-            if candidate_id % 10_000 == 0 and candidate_id > 0:
-                logger.info(f'\t{candidate_id:,} out of {vocab_size:,} candidates considered. '
-                            f'"{self.token_index.id2token[nearest_neighbours[0][0]]}" currently the fave')
-
-        return [self.token_index.id2token[i] for i, dist in nearest_neighbours]
+        return nearest_neighbours
 
     def contains_word(self, word: str) -> bool:
         if word.lower() in [token.lower() for token in self.token_index.token2id]:

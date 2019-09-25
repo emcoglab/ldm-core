@@ -524,6 +524,7 @@ class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
         :param n:
         :param only_consider_most_frequent: Set to None to consider all, otherwise only consider n most frequent words
         :return Ordered list of word–distance pairs.
+        :raises WordNotFoundError
         """
         raise NotImplementedError()
 
