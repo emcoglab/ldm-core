@@ -17,7 +17,6 @@ caiwingfield.net
 from collections import namedtuple
 from os import path
 
-from .config import Config
 from ..corpus.corpus import CorpusMetadata
 
 
@@ -25,6 +24,9 @@ class Preferences:
     """
     Preferences for models.
     """
+
+    # Local import to prevent it being accidentally imported from this module
+    from .config import Config
     
     # Static config
     _config: Config = Config()
