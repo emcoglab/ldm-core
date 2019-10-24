@@ -11,24 +11,29 @@ University of Lancaster
 c.wingfield@lancaster.ac.uk
 caiwingfield.net
 ---------------------------
-2017
+2017, 2019
 ---------------------------
 """
 
+from __future__ import annotations
+
 import logging
-import math
 import re
 from abc import ABCMeta, abstractmethod
-from copy import copy
-from typing import List
+from dataclasses import dataclass
+from os import path
+from typing import List, Optional
+
+from numpy import nan
+from pandas import DataFrame, read_csv
 
 from .results import EvaluationResults
 from ..corpus.indexing import LetterIndexing
-from ..model.base import VectorSemanticModel
+from ..model.base import VectorSemanticModel, DistributionalSemanticModel
 from ..model.ngram import NgramModel
+from ..preferences.preferences import Preferences
 from ..utils.exceptions import WordNotFoundError
 from ..utils.maths import DistanceType, binomial_bayes_factor_one_sided
-from ..preferences.preferences import Preferences
 
 logger = logging.getLogger(__name__)
 
@@ -46,134 +51,69 @@ class SynonymResults(EvaluationResults):
         )
 
 
-class SynonymTestQuestion(object):
-    """
-    A synonym test question.
-    """
-
-    def __init__(self, prompt: str, options: List[str], correct_i: int):
-        self.correct_i: int = correct_i
-        self.options: List[str] = options
-        self.prompt: str = prompt
-
-    def __copy__(self):
-        return SynonymTestQuestion(self.prompt, self.options.copy(), self.correct_i)
-
-    def __str__(self):
-        stars = []
-        for option in self.options:
-            stars.append(f'{option}*' if option is self.correct_answer_word else option)
-        return f"{self.prompt}: {', '.join(stars)}"
-
-    @property
-    def correct_answer_word(self) -> str:
-        return self.options[self.correct_i]
-
-
-class AnsweredQuestion(object):
-    """
-    An answered synonym test question.
-    """
-
-    def __init__(self, question: SynonymTestQuestion, answer_i: int):
-        self.answer_i = answer_i
-        self.question = question
-
-    @property
-    def correct_answer_word(self) -> str:
-        return self.question.options[self.answer_i]
-
-    @property
-    def is_correct(self):
-        """
-        Check whether an answer to the question is correct.
-        """
-        return self.question.correct_i == self.answer_i
-
-    def __str__(self):
-        if self.is_correct:
-            mark = "CORRECT"
-        else:
-            mark = f"INCORRECT ({self.question.correct_answer_word})"
-        return (f"Question: {self.question.prompt}?\t"
-                f"Options: {' '.join(self.question.options)}.\t"
-                f"Answer: {self.correct_answer_word}.\t"
-                f"Mark: {mark}")
-
-
-class AnswerPaper(object):
-    """
-    The list of answered questions.
-    """
-
-    def __init__(self, answers: List[AnsweredQuestion]):
-        self.answers = answers
-
-    @property
-    def score(self) -> float:
-        """
-        The fraction of correct answers.
-        """
-        return self.n_correct_answers / len(self.answers)
-
-    @property
-    def n_correct_answers(self) -> int:
-        """
-        The number of correct answers.
-        """
-        return sum([int(answer.is_correct) for answer in self.answers])
-
-    @property
-    def n_incorrect_answers(self) -> int:
-        """
-        The number of correct answers.
-        """
-        return len(self.answers) - self.n_correct_answers
-
-    def save_text_transcript(self, transcript_path: str):
-        """
-        Saves a text transcript of the results of the test.
-        """
-        # Validate filename
-        if not transcript_path.endswith(".txt"):
-            transcript_path += ".txt"
-
-        with open(transcript_path, mode="w", encoding="utf-8") as transcript_file:
-            transcript_file.write("-----------------------\n")
-            transcript_file.write(f"Overall score: {100 * self.score}%\n")
-            transcript_file.write("-----------------------\n")
-            for answer in self.answers:
-                transcript_file.write(str(answer) + "\n")
-
-
 class SynonymTest(object, metaclass=ABCMeta):
-    def __init__(self):
-        # Backs self.question_list
-        self.question_list: List[SynonymTestQuestion] = self._load()
+    class TestColumn:
+        prompt =     "Prompt"
+        option =     "Option"
+        is_correct = "Is correct"
+
+    test_columns = [
+        TestColumn.prompt,
+        TestColumn.option,
+        TestColumn.is_correct,
+    ]
+
+    def __init__(self, name: str):
+        # The name of the test
+        self.name: str = name
+        self.questions: List[SynonymTest.Question] = self._load()
+
+        # Check all questions have the same number of answers
+        for question in self.questions:
+            assert len(question.answers) == self.n_options
 
     @property
-    @abstractmethod
-    def name(self) -> str:
-        """
-        The name of the test.
-        """
-        raise NotImplementedError()
+    def n_options(self) -> int:
+        return len(self.questions[0].answers)
+
+    @classmethod
+    def questions_to_dataframe(cls, questions: List[SynonymTest.Question]) -> DataFrame:
+        """Convert a (number -> question) dict of questions to a dataframe"""
+        return DataFrame.from_records(
+            data=[
+                {
+                    SynonymTest.TestColumn.prompt: question.prompt_word,
+                    SynonymTest.TestColumn.option: answer.word,
+                    SynonymTest.TestColumn.is_correct: answer.is_correct,
+                }
+                for question in questions
+                for answer in question.answers
+            ],
+            columns=cls.test_columns)
 
     @abstractmethod
-    def _load(self) -> List[SynonymTestQuestion]:
+    def _load(self) -> List[SynonymTest.Question]:
         raise NotImplementedError()
+
+    @dataclass
+    class Answer:
+        word: str
+        is_correct: bool
+
+    @dataclass
+    class Question:
+        prompt_word: str
+        answers: List[SynonymTest.Answer]
 
 
 class ToeflTest(SynonymTest):
-    """
-    TOEFL test.
-    """
+    """TOEFL test."""
+    _n_options = 4
 
-    @property
-    def name(self) -> str:
-        return "TOEFL"
+    def __init__(self):
+        super().__init__("TOEFL")
 
-    def _load(self) -> List[SynonymTestQuestion]:
+    def _load(self) -> List[SynonymTest.Question]:
 
         prompt_re = re.compile(r"^"
                                r"(?P<question_number>\d+)"
@@ -187,14 +127,12 @@ class ToeflTest(SynonymTest):
                                r"\s*$")
         answer_re = re.compile(r"^"
                                r"(?P<question_number>\d+)"
-                               # Who knows what
-                               r"\s+\(a,a,-\)\s+\d+\s+"
+                               r"\s+\(a,a,-\)\s+\d+\s+"  # Who knows what
                                r"(?P<option_letter>[a-d])"
                                r"\s*$")
 
         # Get questions
-        n_options = 4
-        questions: List[SynonymTestQuestion] = []
+        questions: List[SynonymTest.Question] = []
         with open(Preferences.toefl_question_path, mode="r", encoding="utf-8") as question_file:
             # Read groups of lines from file
             while True:
@@ -205,22 +143,25 @@ class ToeflTest(SynonymTest):
                     break
 
                 prompt_match = re.match(prompt_re, prompt_line)
+                # In the file, the questions are numbered 1-indexed, but we want 0-indexed
+                question_number: int = int(prompt_match.group("question_number")) - 1
                 prompt_word = prompt_match.group("prompt_word")
 
-                option_list = []
-                for option_i in range(n_options):
+                options: List[SynonymTest.Answer] = []
+                for option_i in range(self._n_options):
                     option_line = question_file.readline().strip()
                     option_match = re.match(option_re, option_line)
-                    option_list.append(option_match.group("option_word"))
-
-                # Using -1 as an "unset" value
-                questions.append(SynonymTestQuestion(prompt_word, option_list, -1))
+                    option_letter = option_match.group("option_letter")
+                    option_number = LetterIndexing.letter2int(option_letter)
+                    option_word = option_match.group("option_word")
+                    # Set all answers' correctness to False initially, correct one will be set to True eventually
+                    options[option_number] = SynonymTest.Answer(option_word, False)
+                questions[question_number] = SynonymTest.Question(prompt_word, options)
 
                 # There's a blank line after each question
                 question_file.readline()
 
-        # Get answers
-        answers: List[int] = []
+        # Get correct answers
         with open(Preferences.toefl_answer_path, mode="r", encoding="utf-8") as answer_file:
             for answer_line in answer_file:
                 answer_line = answer_line.strip()
@@ -229,35 +170,41 @@ class ToeflTest(SynonymTest):
                     continue
 
                 answer_match = re.match(answer_re, answer_line)
+                # In the file, the questions are numbered 1-indexed, but we want 0-indexed
+                question_number: int = int(answer_match.group("question_number")) - 1
                 option_letter = answer_match.group("option_letter")
-                answer_i = LetterIndexing.letter2int(option_letter)
-                answers.append(answer_i)
+                # 0-indexed
+                answer_number = LetterIndexing.letter2int(option_letter)
+                questions[question_number].answers[answer_number].is_correct = True
 
-        # Add the correct answers
-        for question_i, question in enumerate(questions):
-            question.correct_i = answers[question_i]
+        # Verify each question has exactly 1 correct answer
+        for question in questions:
+            n_correct = 0
+            for answer in question.answers:
+                if answer.is_correct:
+                    n_correct += 1
+            assert n_correct == 1
 
         return questions
 
 
 class EslTest(SynonymTest):
-    """
-    ESL test.
-    """
+    """ESL test."""
 
-    @property
-    def name(self):
-        return "ESL"
+    def __init__(self):
+        super().__init__("ESL")
 
-    def _load(self) -> List[SynonymTestQuestion]:
+    def _load(self) -> List[SynonymTest.Question]:
+
         question_re = re.compile(r"^"
                                  r"(?P<prompt_word>[a-z\-]+)"
                                  r"\s+\|\s+"
                                  r"(?P<option_list>[a-z\-\s|]+)"
                                  r"\s*$")
 
-        questions: List[SynonymTestQuestion] = []
+        questions: List[SynonymTest.Question] = []
         with open(Preferences.esl_test_path, mode="r", encoding="utf-8") as test_file:
+            question_number = 0  # 0-indexed
             for line in test_file:
                 line = line.strip()
 
@@ -273,8 +220,16 @@ class EslTest(SynonymTest):
                 prompt = question_match.group("prompt_word")
                 options = [option.strip() for option in question_match.group("option_list").split("|")]
 
-                # The first one is always the correct one
-                questions.append(SynonymTestQuestion(prompt, options, correct_i=0))
+                questions[question_number] = SynonymTest.Question(
+                    prompt_word=prompt,
+                    answers=[SynonymTest.Answer(
+                            word=option,
+                            # first answer is always the right one
+                            is_correct=option_i == 0)
+                        for option_i, option in enumerate(options)
+                    ])
+
+                question_number += 1
 
         return questions
 
@@ -283,200 +238,189 @@ class LbmMcqTest(SynonymTest):
     """
     MCQ test from Levy, Bullinaria and McCormick (2017).
     """
+    _n_options = 4
 
-    @property
-    def name(self):
-        return "LBM's new MCQ"
+    def __init__(self):
+        super().__init__("LBM's new MCQ")
 
-    def _load(self) -> List[SynonymTestQuestion]:
+    def _load(self) -> List[SynonymTest.Question]:
 
-        n_options = 4
-        questions: List[SynonymTestQuestion] = []
+        questions: List[SynonymTest.Question] = []
+        question_number = 0
         with open(Preferences.mcq_test_path, mode="r", encoding="utf-8") as test_file:
             while True:
                 prompt = test_file.readline().strip()
+
                 # Stop at the last line
                 if not prompt:
                     break
 
-                options = []
-                for i in range(n_options):
-                    options.append(test_file.readline().strip())
+                questions[question_number] = SynonymTest.Question(prompt, [
+                    SynonymTest.Answer(
+                        word=test_file.readline().strip(),
+                        # first answer is always the right one
+                        is_correct=answer_number == 0)
+                    # 0-indexed
+                    for answer_number in range(self._n_options)
+                ])
 
-                # The first one is always the correct one
-                questions.append(SynonymTestQuestion(prompt, options, correct_i=0))
+                question_number += 1
 
         return questions
 
 
-# Static class
 class SynonymTester(object):
     """
-    Administers synonym tests against models.
+    Administers synonym tests against models, saving all results as it goes.
     """
 
-    @staticmethod
-    def administer_test_with_distance(
-            test: SynonymTest,
-            model: VectorSemanticModel,
-            distance_type: DistanceType,
-            truncate_vectors_at_length: int = None
-            ) -> SynonymResults:
+    def __init__(self, test: SynonymTest, save_progress: bool = True, force_reload: bool = False):
+        self.test: SynonymTest = test
+        self._save_progress: bool = save_progress
+
+        # Load existing data if any, else start afresh
+        self._data: DataFrame
+        if self._could_load_data() and not force_reload:
+            self._data = self._load_data()
+        else:
+            self._data = SynonymTest.questions_to_dataframe(self.test.questions)
+
+        if self._save_progress:
+            self._save_data()
+
+    def has_tested_model(self,
+                         model: DistributionalSemanticModel,
+                         distance_type: Optional[DistanceType] = None,
+                         truncate_length: int = None) -> bool:
+        return self.column_name_for_model(model, distance_type, truncate_length) in self._data.columns.values
+
+    def _could_load_data(self) -> bool:
+        return path.isfile(self._save_path)
+
+    def _load_data(self) -> DataFrame:
+        return read_csv(self._save_path, index_col=None)
+
+    def _save_data(self):
+        with open(self._save_path, mode="w", encoding="utf-8") as save_file:
+            self._data.to_csv(save_file, index=False)
+
+    @property
+    def _save_path(self) -> str:
+        return path.join(Preferences.synonym_results_dir, "data.csv")
+
+    def column_name_for_model(self,
+                              model: DistributionalSemanticModel,
+                              distance_type: Optional[DistanceType],
+                              truncate_vectors_at_length: int) -> str:
+        self._validate_model_params(model, distance_type, truncate_vectors_at_length)
+        if distance_type is None:
+            return f"{model.name}"
+        elif truncate_vectors_at_length is None:
+            return f"{model.name}: {distance_type.name}"
+        else:
+            return f"{model.name}: {distance_type.name} ({truncate_vectors_at_length})"
+
+    def column_name_for_model_guess(self,
+                                    model: DistributionalSemanticModel,
+                                    distance_type: Optional[DistanceType],
+                                    truncate_vectors_at_length: int) -> str:
+        return self.column_name_for_model(model, distance_type, truncate_vectors_at_length) + " guess"
+
+    def column_name_for_model_correct(self,
+                                      model: DistributionalSemanticModel,
+                                      distance_type: Optional[DistanceType],
+                                      truncate_vectors_at_length: int) -> str:
+        return self.column_name_for_model(model, distance_type, truncate_vectors_at_length) + " correct"
+
+    def administer_test(self,
+                        model: DistributionalSemanticModel,
+                        distance_type: Optional[DistanceType] = None,
+                        truncate_vectors_at_length: int = None):
         """
-        Administers a test against a model
-        :param test:
+        Administers a test against a model.
+
         :param model: Must be trained.
         :param distance_type:
         :param truncate_vectors_at_length:
         """
 
+        logger.info(f"Administering {self.test.name} test with {model.name} and {distance_type.name}")
+
+        # Validate args
+        self._validate_model_params(model, distance_type, truncate_vectors_at_length)
         assert model.is_trained
 
-        results = SynonymResults()
+        model_distance_col_name = self.column_name_for_model(model, distance_type, truncate_vectors_at_length)
+        model_guess_col_name = self.column_name_for_model_guess(model, distance_type, truncate_vectors_at_length)
+        model_correct_col_name = self.column_name_for_model_correct(model, distance_type, truncate_vectors_at_length)
 
-        answers = []
-        for question in test.question_list:
-            answer = SynonymTester.attempt_question_with_distance(question, model, distance_type, truncate_vectors_at_length)
+        # Treat missing words as missing data
+        def association_or_nan(word_pair):
+            w1, w2 = word_pair
+            try:
+                if isinstance(model, NgramModel):
+                    return model.association_between(w1, w2)
+                elif isinstance(model, VectorSemanticModel):
+                    return model.distance_between(w1, w2, distance_type, truncate_vectors_at_length)
+                else:
+                    raise NotImplementedError()
+            except WordNotFoundError:
+                return nan
 
-            answers.append(answer)
+        self._data[model_distance_col_name] = self._data[
+            [SynonymTest.TestColumn.prompt, SynonymTest.TestColumn.option]
+        ].apply(association_or_nan, axis=1)
 
-        answer_paper = AnswerPaper(answers)
+        # Guess column is True where the model guesses, and is otherwise False
+        self._data[model_guess_col_name] = False
+        guesses = (self._data
+                   .groupby(SynonymTest.TestColumn.prompt, sort=False)
+                   # Reverse. Then idxmin returns the LAST row within a group which attains the minimum value.
+                   # Then, in case of ties, we select the last option.  In TOEFL this is unbiassed (answers in a
+                   # random order); in ESL and LBM this biases us AGAINST selecting the correct answer, as the
+                   # correct answer is always the first option.
+                   [::-1]
+                   [model_distance_col_name].idxmin()
+        )
+        self._data[model_guess_col_name][guesses] = True
 
-        n_correct_answers = answer_paper.n_correct_answers
-        n_total_questions = answer_paper.n_correct_answers + answer_paper.n_incorrect_answers
+        # Mark guesses correct or not
+        # TODO: nans next to non-guesses so can take mean and get score
+        self._data[model_correct_col_name] = self._data[model_guess_col_name] & self._data[SynonymTest.TestColumn.is_correct]
 
-        chance_level = 0.25
+        if self._save_progress:
+            self._save_data()
+
+    def results_for_model(self,
+                          model: DistributionalSemanticModel,
+                          distance_type: Optional[DistanceType] = None,
+                          truncate_vectors_at_length: int = None) -> dict:
+        """
+        Save results based on the current self._data.
+        Returns a dict ready to add to a SynonymResults.
+        """
+        assert self.has_tested_model(model, distance_type, truncate_vectors_at_length)
+
+        model_correct_col_name = self.column_name_for_model_correct(model, distance_type, truncate_vectors_at_length)
+
+        n_correct_answers = self._data[model_correct_col_name].sum()
+        n_total_questions = len(self.test.questions)
+        score = n_correct_answers / n_total_questions
+
+        chance_level = 1 / self.test.n_options
         b10 = binomial_bayes_factor_one_sided(n_total_questions, n_correct_answers, chance_level)
 
-        results.add_result(
-            test.name, model, distance_type, {
-                "Correct answers": n_correct_answers,
-                "Total questions": n_total_questions,
-                "Score":           answer_paper.score,
-                "B10":             b10
-            },
-            append_to_model_name="" if truncate_vectors_at_length is None else f" ({truncate_vectors_at_length})")
-
-        return results
+        return {
+            "Correct answers": n_correct_answers,
+            "Total questions": n_total_questions,
+            "Score":           score,
+            "B10":             b10
+        }
 
     @staticmethod
-    def administer_test_with_similarity(
-            test: SynonymTest,
-            model: NgramModel
-            ) -> SynonymResults:
-        """
-        Administers a test against a model
-        :param test:
-        :param model: Must be trained.
-        """
-
-        assert model.is_trained
-
-        results = SynonymResults()
-
-        answers = []
-        for question in test.question_list:
-            answer = SynonymTester.attempt_question_with_similarity(question, model)
-
-            answers.append(answer)
-
-        answer_paper = AnswerPaper(answers)
-
-        n_correct_answers = answer_paper.n_correct_answers
-        n_total_questions = answer_paper.n_correct_answers + answer_paper.n_incorrect_answers
-
-        chance_level = 0.25
-        b10 = binomial_bayes_factor_one_sided(n_total_questions, n_correct_answers, chance_level)
-
-        results.add_result(
-            test.name, model, None, {
-                "Correct answers": n_correct_answers,
-                "Total questions": n_total_questions,
-                "Score":           answer_paper.score,
-                "B10":             b10
-            })
-
-        return results
-
-    @staticmethod
-    def attempt_question_with_distance(question: SynonymTestQuestion, model: VectorSemanticModel,
-                                       distance_type: DistanceType,
-                                       truncate_vectors_at_length: int = None) -> AnsweredQuestion:
-        """
-        Attempt a question.
-        :param question:
-        :param model:
-        :param distance_type:
-        :param truncate_vectors_at_length:
-        :return: answer
-        """
-        # The current best guess
-        best_guess_i = -1
-        # _d for distance
-        best_guess_d = math.inf
-
-        # Record distances here so we can check for ties when a selection is finally made
-        distances = []
-
-        # List in reverse order, just to negate any possibility that we preference the first option, which is usually
-        # the correct one.
-        for option_i, option in reversed(list(enumerate(question.options))):
-            try:
-                guess_d = model.distance_between(question.prompt, option, distance_type,
-                                                 truncate_vectors_at_length)
-                distances.append(guess_d)
-            except WordNotFoundError as er:
-                logger.warning(er.message)
-                # Make sure we don't pick this one, so we give it the largest possible distance
-                guess_d = math.inf
-
-            if guess_d < best_guess_d:
-                best_guess_i = option_i
-                best_guess_d = guess_d
-
-        tied_entry_indices = [i for i, d in enumerate(distances) if d == best_guess_d]
-        if len(tied_entry_indices) > 1 and best_guess_d > 0:
-            tied_entries = [question.options[i].upper() for i in tied_entry_indices]
-            logger.warning(f"{question.prompt.upper()}'s chosen synonym {question.options[best_guess_i]} "
-                           f"was tied with {' and '.join(tied_entries)}.")
-
-        return AnsweredQuestion(copy(question), best_guess_i)
-
-    @staticmethod
-    def attempt_question_with_similarity(question: SynonymTestQuestion, model: NgramModel) -> AnsweredQuestion:
-        """
-        Attempt a question.
-        :param question:
-        :param model:
-        :return: answer
-        """
-        # The current best guess
-        best_guess_i = -1
-        # _a for association
-        best_guess_a = -math.inf
-
-        # Record associations here so we can check for ties when a selection is finally made
-        associations = []
-
-        # List in reverse order: in case we have all items identical we won't automatically pick the first one (which is
-        # usually the correct one).
-        for option_i, option in reversed(list(enumerate(question.options))):
-            try:
-                guess_a = model.association_between(question.prompt, option)
-                associations.append(guess_a)
-            except WordNotFoundError as er:
-                logger.warning(er.message)
-                # Make sure we don't pick this one, so we give it the smallest possible association
-                guess_a = -math.inf
-
-            if guess_a > best_guess_a:
-                best_guess_i = option_i
-                best_guess_a = guess_a
-
-        tied_entry_indices = [i for i, a in enumerate(associations) if a == best_guess_a]
-        if len(tied_entry_indices) > 1 and best_guess_a > 0:
-            tied_entries = [question.options[i].upper() for i in tied_entry_indices]
-            logger.warning(f"{question.prompt.upper()}'s chosen synonym {question.options[best_guess_i]} "
-                           f"was tied with {' and '.join(tied_entries)}.")
-
-        return AnsweredQuestion(copy(question), best_guess_i)
+    def _validate_model_params(model, distance_type, truncate_vectors_at_length):
+        if isinstance(model, NgramModel):
+            assert distance_type is None
+            assert truncate_vectors_at_length is None
+        if isinstance(model, VectorSemanticModel):
+            assert distance_type is not None

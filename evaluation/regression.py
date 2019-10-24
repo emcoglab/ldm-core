@@ -67,8 +67,6 @@ class RegressionData(metaclass=ABCMeta):
             logger.info(f"Loading {name} data from source xls file")
             self._all_data = self._load_from_source()
 
-        assert self._all_data is not None
-
         if self._save_progress:
             self.save()
 
@@ -354,9 +352,7 @@ class SppData(RegressionData):
             # Add model distance column to data frame
             model_association = self.dataframe[
                 [key_column, "TargetWord"]
-            ].apply(
-                model_association_or_none,
-                axis=1)
+            ].apply(model_association_or_none, axis=1)
 
             if for_priming_effect:
                 # The priming predictor is the difference in model distance between the related and

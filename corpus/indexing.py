@@ -158,7 +158,8 @@ class LetterIndexing(object):
         """
         Converts roman letters a, b, c, ... into integers 0, 1, 2, ...
         """
-        i = LetterIndexing._the_alphabet.index(letter)
+        assert len(letter) == 1
+        i = LetterIndexing._the_alphabet.index(letter.lower())
         if i == -1:
             raise KeyError()
         return i
