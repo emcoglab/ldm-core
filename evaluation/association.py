@@ -62,7 +62,7 @@ class WordAssociationTest(metaclass=ABCMeta):
     """
 
     def __init__(self):
-        # Backs self.judgement_list
+        # Backs self.association_list
         self._association_list: List[WordAssociation] = None
 
     @property
@@ -102,7 +102,7 @@ class AssociationTester(object):
     def administer_test(
             test: WordAssociationTest,
             model: DistributionalSemanticModel,
-            distance_type: Optional[DistanceType]
+            distance_type: Optional[DistanceType],
             ) -> AssociationResults:
         """
         Administers a battery of tests against a model

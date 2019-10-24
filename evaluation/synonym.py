@@ -350,10 +350,10 @@ class SynonymTester(object):
 
         results.add_result(
             test.name, model, distance_type, {
-                "Correct answers"     : n_correct_answers,
-                "Total questions"     : n_total_questions,
-                "Score"               : answer_paper.score,
-                "B10"                 : b10
+                "Correct answers": n_correct_answers,
+                "Total questions": n_total_questions,
+                "Score":           answer_paper.score,
+                "B10":             b10
             },
             append_to_model_name="" if truncate_vectors_at_length is None else f" ({truncate_vectors_at_length})")
 
@@ -390,16 +390,17 @@ class SynonymTester(object):
 
         results.add_result(
             test.name, model, None, {
-                "Correct answers"     : n_correct_answers,
-                "Total questions"     : n_total_questions,
-                "Score"               : answer_paper.score,
-                "B10"                 : b10
+                "Correct answers": n_correct_answers,
+                "Total questions": n_total_questions,
+                "Score":           answer_paper.score,
+                "B10":             b10
             })
 
         return results
 
     @staticmethod
-    def attempt_question_with_distance(question: SynonymTestQuestion, model: VectorSemanticModel, distance_type: DistanceType,
+    def attempt_question_with_distance(question: SynonymTestQuestion, model: VectorSemanticModel,
+                                       distance_type: DistanceType,
                                        truncate_vectors_at_length: int = None) -> AnsweredQuestion:
         """
         Attempt a question.
