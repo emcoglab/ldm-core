@@ -130,7 +130,10 @@ class AssociationTester(Tester):
         :param distance_type:
         """
 
-        logger.info(f"Administering {self.test.name} test with {model.name} and {distance_type.name}")
+        if distance_type is not None:
+            logger.info(f"Administering {self.test.name} test with {model.name} and {distance_type.name}")
+        else:
+            logger.info(f"Administering {self.test.name} test with {model.name}")
 
         # validate args
         self._validate_model_params(model, distance_type)
@@ -174,10 +177,10 @@ class AssociationTester(Tester):
         # Remove rows with missing results, as they wouldn't be missing in the baseline case.
         local_data.dropna(how="any")
         # Rename to make regression formulae easier
-        local_data.rename({
+        local_data.rename(columns={
             self.column_name_for_model(model, distance_type): "model",
             WordAssociationTest.TestColumn.association_strength: "human",
-        })
+        }, inplace=True)
 
         # Apply correlation
         if correlation_type == CorrelationType.Pearson:
@@ -388,10 +391,10 @@ class ThematicRelatedness(WordAssociationTest):
         :param only_use_response: If None (default), use order-weighted response frequency.
         """
         assert only_use_response in [None, 1, 2, 3]
+        self._only_use_response = only_use_response
         super().__init__("Thematic relatedness"
                          if only_use_response is None
                          else f"Thematic relatedness (R{only_use_response} only)")
-        self._only_use_response = only_use_response
 
     def _load(self) -> List[WordAssociationTest.WordAssociation]:
         with open(Preferences.thematic_association_path, mode="r", encoding="utf-8") as thematic_assoc_file:

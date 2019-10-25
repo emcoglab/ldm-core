@@ -25,7 +25,7 @@ from os import path
 from typing import List, Optional
 
 from numpy import nan
-from pandas import DataFrame, read_csv
+from pandas import DataFrame
 
 from .test import Test, Tester
 from .results import EvaluationResults
@@ -149,11 +149,11 @@ class ToeflTest(SynonymTest):
                     option_line = question_file.readline().strip()
                     option_match = re.match(option_re, option_line)
                     option_letter = option_match.group("option_letter")
-                    option_number = LetterIndexing.letter2int(option_letter)
+                    assert option_i == LetterIndexing.letter2int(option_letter)
                     option_word = option_match.group("option_word")
                     # Set all answers' correctness to False initially, correct one will be set to True eventually
-                    options[option_number] = SynonymTest.Answer(option_word, False)
-                questions[question_number] = SynonymTest.Question(prompt_word, options)
+                    options.append(SynonymTest.Answer(option_word, False))
+                questions.append(SynonymTest.Question(prompt_word, options))
 
                 # There's a blank line after each question
                 question_file.readline()
@@ -201,7 +201,6 @@ class EslTest(SynonymTest):
 
         questions: List[SynonymTest.Question] = []
         with open(Preferences.esl_test_path, mode="r", encoding="utf-8") as test_file:
-            question_number = 0  # 0-indexed
             for line in test_file:
                 line = line.strip()
 
@@ -217,16 +216,14 @@ class EslTest(SynonymTest):
                 prompt = question_match.group("prompt_word")
                 options = [option.strip() for option in question_match.group("option_list").split("|")]
 
-                questions[question_number] = SynonymTest.Question(
+                questions.append(SynonymTest.Question(
                     prompt_word=prompt,
                     answers=[SynonymTest.Answer(
                             word=option,
                             # first answer is always the right one
                             is_correct=option_i == 0)
                         for option_i, option in enumerate(options)
-                    ])
-
-                question_number += 1
+                    ]))
 
         return questions
 
@@ -243,7 +240,6 @@ class LbmMcqTest(SynonymTest):
     def _load(self) -> List[SynonymTest.Question]:
 
         questions: List[SynonymTest.Question] = []
-        question_number = 0
         with open(Preferences.mcq_test_path, mode="r", encoding="utf-8") as test_file:
             while True:
                 prompt = test_file.readline().strip()
@@ -252,16 +248,15 @@ class LbmMcqTest(SynonymTest):
                 if not prompt:
                     break
 
-                questions[question_number] = SynonymTest.Question(prompt, [
-                    SynonymTest.Answer(
-                        word=test_file.readline().strip(),
-                        # first answer is always the right one
-                        is_correct=answer_number == 0)
-                    # 0-indexed
-                    for answer_number in range(self._n_options)
-                ])
-
-                question_number += 1
+                questions.append(
+                    SynonymTest.Question(prompt, [
+                        SynonymTest.Answer(
+                            word=test_file.readline().strip(),
+                            # first answer is always the right one
+                            is_correct=answer_number == 0)
+                        # 0-indexed
+                        for answer_number in range(self._n_options)
+                    ]))
 
         return questions
 
@@ -324,7 +319,10 @@ class SynonymTester(Tester):
         :param truncate_vectors_at_length:
         """
 
-        logger.info(f"Administering {self.test.name} test with {model.name} and {distance_type.name}")
+        if distance_type is not None:
+            logger.info(f"Administering {self.test.name} test with {model.name} and {distance_type.name}")
+        else:
+            logger.info(f"Administering {self.test.name} test with {model.name}")
 
         # Validate args
         self._validate_model_params(model, distance_type, truncate_vectors_at_length)
@@ -353,15 +351,32 @@ class SynonymTester(Tester):
 
         # Guess column is True where the model guesses, and is otherwise False
         self._data[model_guess_col_name] = False
-        guesses = (self._data
-                   .groupby(SynonymTest.TestColumn.prompt, sort=False)
-                   # Reverse. Then idxmin returns the LAST row within a group which attains the minimum value.
-                   # Then, in case of ties, we select the last option.  In TOEFL this is unbiassed (answers in a
-                   # random order); in ESL and LBM this biases us AGAINST selecting the correct answer, as the
-                   # correct answer is always the first option.
-                   [::-1]
-                   [model_distance_col_name].idxmin()
-        )
+        if isinstance(model, NgramModel):
+            guesses = (self._data
+                       # Reverse. Then idxmax returns the LAST row within a group which attains the minimum value.
+                       # Then, in case of ties, we select the last option.
+                       # In TOEFL this is unbiased (answers in a random order).
+                       # In ESL and LBM this biases us AGAINST selecting the correct answer, as the correct answer is
+                       # always the first option.
+                       [::-1]
+                       .groupby(SynonymTest.TestColumn.prompt, sort=False)
+                       # idxmax to select the choice with the largest association value
+                       .idxmax()
+                       [model_distance_col_name])
+        elif isinstance(model, VectorSemanticModel):
+            guesses = (self._data
+                       # Reverse. Then idxmin returns the LAST row within a group which attains the minimum value.
+                       # Then, in case of ties, we select the last option.
+                       # In TOEFL this is unbiased (answers in a random order).
+                       # In ESL and LBM this biases us AGAINST selecting the correct answer, as the correct answer is
+                       # always the first option.
+                       [::-1]
+                       .groupby(SynonymTest.TestColumn.prompt, sort=False)
+                       # idxmin to select the choice with the smallest distance
+                       .idxmin()
+                       [model_distance_col_name])
+        else:
+            raise NotImplementedError()
         self._data[model_guess_col_name][guesses] = True
 
         # Mark guesses correct or not
