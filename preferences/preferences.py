@@ -104,11 +104,6 @@ class Preferences:
         ukwac=ukwac_processing_metas["tokenised"],
     )
 
-    # Word lists
-    brysbaert_1w = CorpusMetadata(
-        name="Brysbaert 1 word",
-        path=_config.value_by_key_path("word-lists", "brysbaert-1-word", "path"))
-
     # We will test models with windows of each of these radii
     window_radii = [1, 3, 5, 10]
 
