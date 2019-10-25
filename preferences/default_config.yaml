@@ -76,11 +76,6 @@ corpora:
     name: "UKWAC"
     path: "/Volumes/Data/corpora/UKWAC/2 Partitioned"
 
-# Word lists for coverage checks
-word-lists:
-  brysbaert-1-word:
-    path: "/Users/caiwingfield/code/corpus_analysis/scripts_corpus_info/brysbaert1.wordlist"
-
 # Locations of files relevant to each model
 models:
   # The directory where all models live.  Within this directory, models must be arranged in the following manner:
