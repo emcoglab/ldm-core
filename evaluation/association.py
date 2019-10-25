@@ -15,18 +15,21 @@ caiwingfield.net
 ---------------------------
 """
 
+from __future__ import annotations
+
 import logging
 import re
 import csv
 from abc import ABCMeta, abstractmethod
+from dataclasses import dataclass
 from typing import List, Optional
 from os import path
 
 import numpy
-import scipy.stats
 import statsmodels.formula.api as sm
 from pandas import DataFrame
 
+from .test import Test, Tester
 from .results import EvaluationResults
 from ..model.base import DistributionalSemanticModel, VectorSemanticModel
 from ..model.ngram import NgramModel
@@ -45,188 +48,185 @@ class AssociationResults(EvaluationResults):
         )
 
 
-class WordAssociation(object):
-    """
-    A judgement of the similarity between two words.
-    """
+class WordAssociationTest(Test, metaclass=ABCMeta):
+    class TestColumn:
+        word_1 = "Word 1"
+        word_2 = "Word 2"
+        association_strength = "Association strength"
 
-    def __init__(self, word_1: str, word_2: str, association_strength: float):
-        self.word_1 = word_1
-        self.word_2 = word_2
-        self.association_strength = association_strength
+    test_columns = [
+        TestColumn.word_1,
+        TestColumn.word_2,
+        TestColumn.association_strength,
+    ]
 
-
-class WordAssociationTest(metaclass=ABCMeta):
-    """
-    A test against word-association data.
-    """
-
-    def __init__(self):
+    def __init__(self, name: str):
+        super().__init__(name)
         # Backs self.association_list
-        self._association_list: List[WordAssociation] = None
+        self.associations: List[WordAssociationTest.WordAssociation] = self._load()
 
-    @property
-    def association_list(self) -> List[WordAssociation]:
-        """
-        The list of associations.
-        """
-        # Lazy load
-        if self._association_list is None:
-            self._association_list = self._load()
-        assert self._association_list is not None
-        return self._association_list
-
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        """
-        The name of the test.
-        """
-        raise NotImplementedError()
+    def associations_to_dataframe(self) -> DataFrame:
+        return DataFrame.from_records(
+            data=[
+                {
+                    WordAssociationTest.TestColumn.word_1: association.word_1,
+                    WordAssociationTest.TestColumn.word_2: association.word_2,
+                    WordAssociationTest.TestColumn.association_strength: association.association_strength,
+                }
+                for association in self.associations
+            ],
+            columns=WordAssociationTest.test_columns)
 
     @abstractmethod
-    def _load(self) -> List[WordAssociation]:
-        """
-        Load from source.
-        """
+    def _load(self) -> List[WordAssociationTest.WordAssociation]:
         raise NotImplementedError()
+
+    @dataclass
+    class WordAssociation(object):
+        """A judgement of the similarity between two words."""
+        word_1: str
+        word_2: str
+        association_strength: float
 
 
 # Static class
-class AssociationTester(object):
+class AssociationTester(Tester):
     """
     Administers a word-association test against a model.
     """
+    def __init__(self, test: WordAssociationTest, save_progress: bool = True, force_reload: bool = False):
+        self.test: WordAssociationTest = test
+        super().__init__(save_progress, force_reload)
 
-    @staticmethod
+    def _fresh_data(self) -> DataFrame:
+        return self.test.associations_to_dataframe()
+
+    @property
+    def _save_path(self) -> str:
+        return path.join(Preferences.association_results_dir, f"{self.test.name} data.csv")
+
+    def has_tested_model(self,
+                         model: DistributionalSemanticModel,
+                         distance_type: Optional[DistanceType] = None) -> bool:
+        return self.column_name_for_model(model, distance_type) in self._data.columns.values
+
+    def column_name_for_model(self,
+                              model: DistributionalSemanticModel,
+                              distance_type: Optional[DistanceType]) -> str:
+        self._validate_model_params(model, distance_type)
+        if distance_type is None:
+            return f"{model.name}"
+        else:
+            return f"{model.name}: {distance_type.name}"
+
     def administer_test(
-            test: WordAssociationTest,
+            self,
             model: DistributionalSemanticModel,
-            distance_type: Optional[DistanceType],
-            ) -> AssociationResults:
+            distance_type: Optional[DistanceType] = None):
         """
         Administers a battery of tests against a model
-        :param test:
+
         :param model: Must be trained.
         :param distance_type:
         """
 
+        logger.info(f"Administering {self.test.name} test with {model.name} and {distance_type.name}")
+
+        # validate args
+        self._validate_model_params(model, distance_type)
         assert model.is_trained
+
+        model_distance_col_name = self.column_name_for_model(model, distance_type)
+
+        # Treat missing words as missing data
+        def association_or_nan(word_pair):
+            w1, w2 = word_pair
+            try:
+                if isinstance(model, NgramModel):
+                    return model.association_between(w1, w2)
+                elif isinstance(model, VectorSemanticModel):
+                    return model.distance_between(w1, w2, distance_type)
+                else:
+                    raise NotImplementedError()
+            except WordNotFoundError:
+                return numpy.nan
 
         results = AssociationResults()
 
-        human_judgements: List[WordAssociation] = []
-        model_judgements: List[WordAssociation] = []
-        for human_judgement in test.association_list:
-            try:
-                # Vector models compare words using distances
-                if isinstance(model, VectorSemanticModel):
-                    model_judgement = model.distance_between(
-                        human_judgement.word_1,
-                        human_judgement.word_2,
-                        distance_type)
-                # Ngram models compare words using associations
-                elif isinstance(model, NgramModel):
-                    model_judgement = model.association_between(
-                        human_judgement.word_1,
-                        human_judgement.word_2
-                    )
-                else:
-                    raise TypeError()
-            except WordNotFoundError as er:
-                # If we can't find one of the words in the corpus, just ignore it.
-                logger.warning(er.message)
-                continue
+        self._data[model_distance_col_name] = self._data[
+            [WordAssociationTest.TestColumn.word_1, WordAssociationTest.TestColumn.word_2]
+        ].apply(association_or_nan, axis=1)
 
-            # If both words were found in the model, add them to the test list
-            human_judgements.append(human_judgement)
-            model_judgements.append(WordAssociation(
-                human_judgement.word_1,
-                human_judgement.word_2,
-                model_judgement))
+        if self._save_progress:
+            self._save_data()
 
-        # Save transcript
-        if distance_type is None:
-            transcript_csv_name = f"transcript test={test.name} model={model.name}.csv"
+    def results_for_model(self,
+                          correlation_type: CorrelationType,
+                          model: DistributionalSemanticModel,
+                          distance_type: Optional[DistanceType] = None) -> dict:
+        """
+        Save results based on the current self._data.
+        Returns a dict ready to add to a AssociationResults.
+        """
+        assert self.has_tested_model(model, distance_type)
+
+        local_data: DataFrame = self._data.copy()
+        # Remove rows with missing results, as they wouldn't be missing in the baseline case.
+        local_data.dropna(how="any")
+        # Rename to make regression formulae easier
+        local_data.rename({
+            self.column_name_for_model(model, distance_type): "model",
+            WordAssociationTest.TestColumn.association_strength: "human",
+        })
+
+        # Apply correlation
+        if correlation_type == CorrelationType.Pearson:
+            correlation = local_data["human"].corr(local_data["model"], method="pearson")
+        elif correlation_type == CorrelationType.Spearman:
+            correlation = local_data["human"].corr(local_data["model"], method="spearman")
         else:
-            transcript_csv_name = f"transcript test={test.name} model={model.name} distance={distance_type.name}.csv"
+            raise NotImplementedError()
 
-        transcript_csv_path = path.join(Preferences.association_results_dir, "transcripts", transcript_csv_name)
-        DataFrame.from_dict({
-            "Word 1"         : [j.word_1 for j in human_judgements],
-            "Word 2"         : [j.word_2 for j in human_judgements],
-            "Model distance" : [j.association_strength for j in model_judgements],
-            "Data similarity": [j.association_strength for j in human_judgements]
-        }).to_csv(transcript_csv_path, index=False)
+        # Estimate Bayes factor from regression, as advised in
+        # Jarosz & Wiley (2014) "What Are the Odds? A Practical Guide to Computing and Reporting Bayes Factors".
+        # Journal of Problem Solving 7. doi:10.7771/1932-6246.1167. p. 5.
 
-        # Apply correlations
-        for correlation_type in CorrelationType:
-            if correlation_type is CorrelationType.Pearson:
-                correlation = numpy.corrcoef(
-                    [j.association_strength for j in human_judgements],
-                    [j.association_strength for j in model_judgements])[0][1]
+        # For spearman, we rank the data before regressing
+        if correlation_type == CorrelationType.Spearman:
+            local_data["human"] = local_data["human"].rank()
+            local_data["model"] = local_data["model"].rank()
 
-                # Estimate Bayes factor from regression, as advised in
-                # Jarosz & Wiley (2014) "What Are the Odds? A Practical Guide to Computing and Reporting Bayes Factors".
-                # Journal of Problem Solving 7. doi:10.7771/1932-6246.1167. p. 5.
-                data: DataFrame = DataFrame.from_dict({
-                    "human": [j.association_strength for j in human_judgements],
-                    "model": [j.association_strength for j in model_judgements]
-                })
-                # Remove rows with missing results, as they wouldn't be missing in the baseline case.
-                data = data.dropna(how="any")
-                # Compare variance explained (correlation squared) with two predictors versus one predictor (intercept)
-                model_bic    = sm.ols(formula="human ~ model", data=data).fit().bic
-                baseline_bic = sm.ols(formula="human ~ 1",     data=data).fit().bic
-                b10_approx   = numpy.exp((baseline_bic - model_bic) / 2)
-                # In case b10 goes to inf
-                log10_b10_approx = ((baseline_bic - model_bic) / 2) * numpy.log10(numpy.exp(1))
-            elif correlation_type is CorrelationType.Spearman:
-                # PyCharm erroneously detects input types for scipy.stats.spearmanr as int rather than ndarray
-                # noinspection PyTypeChecker,PyUnresolvedReferences
-                correlation = scipy.stats.spearmanr(
-                    [j.association_strength for j in human_judgements],
-                    [j.association_strength for j in model_judgements]).correlation
+        # Compare variance explained (correlation squared) with two predictors versus one predictor (intercept)
+        model_bic    = sm.ols(formula="human ~ model", data=local_data).fit().bic
+        baseline_bic = sm.ols(formula="human ~ 1",     data=local_data).fit().bic
+        b10_approx   = numpy.exp((baseline_bic - model_bic) / 2)
+        # In case b10 goes to inf
+        log10_b10_approx = ((baseline_bic - model_bic) / 2) * numpy.log10(numpy.exp(1))
 
-                # Estimate Bayes factors using same approach as for Pearson, but with ranked data
-                # Since Spearman is just Pearson on ranks.
-                data = DataFrame.from_dict({
-                    "human": scipy.stats.rankdata([j.association_strength for j in human_judgements]),
-                    "model": scipy.stats.rankdata([j.association_strength for j in model_judgements])
-                })
-                # Remove rows with missing results, as they wouldn't be missing in the baseline case.
-                data = data.dropna(how="any")
-                model_bic    = sm.ols(formula="human ~ model", data=data).fit().bic
-                baseline_bic = sm.ols(formula="human ~ 1",     data=data).fit().bic
-                b10_approx = numpy.exp((baseline_bic - model_bic) / 2)
-                # In case b10 goes to inf
-                log10_b10_approx = ((baseline_bic - model_bic) / 2) * numpy.log10(numpy.exp(1))
-            else:
-                raise ValueError(correlation_type)
+        return {
+            "Correlation type": correlation_type.name,
+            "Correlation":      correlation,
+            "Model BIC":        model_bic,
+            "Baseline BIC":     baseline_bic,
+            "B10 approx":       b10_approx,
+            "Log10 B10 approx": log10_b10_approx
+        }
 
-            results.add_result(test.name, model, distance_type, {
-                "Correlation type"  : correlation_type.name,
-                "Correlation"       : correlation,
-                "Model BIC"         : model_bic,
-                "Baseline BIC"      : baseline_bic,
-                "B10 approx"        : b10_approx,
-                "Log10 B10 approx"  : log10_b10_approx
-            })
-
-        return results
+    @staticmethod
+    def _validate_model_params(model: DistributionalSemanticModel, distance_type: Optional[DistanceType]):
+        if isinstance(model, NgramModel):
+            assert distance_type is None
+        if isinstance(model, VectorSemanticModel):
+            assert distance_type is not None
 
 
 class SimlexSimilarity(WordAssociationTest):
-    """
-    Simlex-999 judgements.
-    """
+    """Simlex-999 judgements."""
 
-    @property
-    def name(self) -> str:
-        return "Simlex-999"
+    def __init__(self):
+        super().__init__("Simlex-999")
 
-    def _load(self) -> List[WordAssociation]:
-
+    def _load(self) -> List[WordAssociationTest.WordAssociation]:
         entry_re = re.compile(r"^"
                               r"(?P<word_1>[a-z]+)"  # The first concept in the pair.
                               r"\s+"
@@ -257,7 +257,7 @@ class SimlexSimilarity(WordAssociationTest):
             for line in simlex_file:
                 entry_match = re.match(entry_re, line)
                 if entry_match:
-                    associations.append(WordAssociation(
+                    associations.append(WordAssociationTest.WordAssociation(
                         entry_match.group("word_1"),
                         entry_match.group("word_2"),
                         float(entry_match.group("simlex_999"))))
@@ -270,13 +270,10 @@ class MenSimilarity(WordAssociationTest):
     MEN similarity judgements.
     From: Bruni, E., Tran, NK., Baroni, M. "Multimodal Distributional Semantics". J. AI Research. 49:1--47 (2014).
     """
+    def __init__(self):
+        super().__init__("MEN")
 
-    @property
-    def name(self) -> str:
-        return "MEN"
-
-    def _load(self) -> List[WordAssociation]:
-
+    def _load(self) -> List[WordAssociationTest.WordAssociation]:
         entry_re = re.compile(r"^"
                               r"(?P<word_1>[a-z]+)"  # The first concept in the pair.
                               r"\s"
@@ -290,7 +287,7 @@ class MenSimilarity(WordAssociationTest):
             for line in men_file:
                 entry_match = re.match(entry_re, line)
                 if entry_match:
-                    judgements.append(WordAssociation(
+                    judgements.append(WordAssociationTest.WordAssociation(
                         entry_match.group("word_1"),
                         entry_match.group("word_2"),
                         float(entry_match.group("association"))))
@@ -299,15 +296,11 @@ class MenSimilarity(WordAssociationTest):
 
 
 class WordsimSimilarity(WordAssociationTest):
-    """
-    WordSim-353 similarity judgements.
-    """
+    """WordSim-353 similarity judgements."""
+    def __init__(self):
+        super().__init__("WordSim-353 similarity")
 
-    @property
-    def name(self) -> str:
-        return "WordSim-353 similarity"
-
-    def _load(self):
+    def _load(self) -> List[WordAssociationTest.WordAssociation]:
         entry_re = re.compile(r"^"
                               r"(?P<word_1>[a-z]+)"  # The first concept in the pair.
                               r"\s+"
@@ -324,7 +317,7 @@ class WordsimSimilarity(WordAssociationTest):
             for line in wordsim_file:
                 entry_match = re.match(entry_re, line)
                 if entry_match:
-                    judgements.append(WordAssociation(
+                    judgements.append(WordAssociationTest.WordAssociation(
                         entry_match.group("word_1"),
                         entry_match.group("word_2"),
                         float(entry_match.group("similarity"))))
@@ -333,15 +326,11 @@ class WordsimSimilarity(WordAssociationTest):
 
 
 class WordsimRelatedness(WordAssociationTest):
-    """
-    WordSim-353 relatedness judgements.
-    """
+    """WordSim-353 relatedness judgements."""
+    def __init__(self):
+        super().__init__("WordSim-353 relatedness")
 
-    @property
-    def name(self) -> str:
-        return "WordSim-353 relatedness"
-
-    def _load(self):
+    def _load(self) -> List[WordAssociationTest.WordAssociation]:
         entry_re = re.compile(r"^"
                               r"(?P<word_1>[a-z]+)"  # The first concept in the pair.
                               r"\s+"
@@ -358,7 +347,7 @@ class WordsimRelatedness(WordAssociationTest):
             for line in wordsim_file:
                 entry_match = re.match(entry_re, line)
                 if entry_match:
-                    judgements.append(WordAssociation(
+                    judgements.append(WordAssociationTest.WordAssociation(
                         entry_match.group("word_1"),
                         entry_match.group("word_2"),
                         float(entry_match.group("relatedness"))))
@@ -370,19 +359,17 @@ class ColourEmotionAssociation(WordAssociationTest):
     """
     Sutton & Altarriba (2016) colour–emotion association norms.
     """
+    def __init__(self):
+        super().__init__("Colour associations")
 
-    @property
-    def name(self) -> str:
-        return "Colour associations"
-
-    def _load(self) -> List[WordAssociation]:
+    def _load(self) -> List[WordAssociationTest.WordAssociation]:
         with open(Preferences.colour_association_path, mode="r", encoding="utf-8") as colour_assoc_file:
             # Skip header line
             colour_assoc_file.readline()
             assocs = []
             for line in colour_assoc_file:
                 parts = line.split(",")
-                assocs.append(WordAssociation(
+                assocs.append(WordAssociationTest.WordAssociation(
                     # word
                     parts[1].lower(),
                     # colour
@@ -394,26 +381,19 @@ class ColourEmotionAssociation(WordAssociationTest):
 
 
 class ThematicRelatedness(WordAssociationTest):
-    """
-    Jouravlev & McRae (2015) thematic relatedness production norms.
-    """
+    """Jouravlev & McRae (2015) thematic relatedness production norms."""
 
     def __init__(self, only_use_response=None):
         """
-        :param only_use_response: If None, use order-weighted response frequency.
+        :param only_use_response: If None (default), use order-weighted response frequency.
         """
-        super().__init__()
-        assert only_use_response is None or only_use_response in [1, 2, 3]
+        assert only_use_response in [None, 1, 2, 3]
+        super().__init__("Thematic relatedness"
+                         if only_use_response is None
+                         else f"Thematic relatedness (R{only_use_response} only)")
         self._only_use_response = only_use_response
 
-    @property
-    def name(self) -> str:
-        if self._only_use_response is None:
-            return "Thematic relatedness"
-        else:
-            return f"Thematic relatedness (R{self._only_use_response} only)"
-
-    def _load(self):
+    def _load(self) -> List[WordAssociationTest.WordAssociation]:
         with open(Preferences.thematic_association_path, mode="r", encoding="utf-8") as thematic_assoc_file:
 
             csvreader = csv.reader(thematic_assoc_file, delimiter=",", quotechar='"')
@@ -457,7 +437,7 @@ class ThematicRelatedness(WordAssociationTest):
                 else:
                     raise ValueError()
 
-                assocs.append(WordAssociation(
+                assocs.append(WordAssociationTest.WordAssociation(
                     word,
                     response,
                     similarity_value))

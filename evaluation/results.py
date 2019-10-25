@@ -118,9 +118,7 @@ class EvaluationResults(metaclass=ABCMeta):
                ].shape[0] > 0
 
     def save(self):
-        """
-        Save (and overwrite) data.
-        """
+        """Save (and overwrite) data."""
         assert self.data is not None
         with open(self._pickle_path, mode="wb") as data_file:
             pickle.dump(self.data, data_file)

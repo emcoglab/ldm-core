@@ -27,6 +27,7 @@ from typing import List, Optional
 from numpy import nan
 from pandas import DataFrame, read_csv
 
+from .test import Test, Tester
 from .results import EvaluationResults
 from ..corpus.indexing import LetterIndexing
 from ..model.base import VectorSemanticModel, DistributionalSemanticModel
@@ -51,7 +52,7 @@ class SynonymResults(EvaluationResults):
         )
 
 
-class SynonymTest(object, metaclass=ABCMeta):
+class SynonymTest(Test, metaclass=ABCMeta):
     class TestColumn:
         prompt =     "Prompt"
         option =     "Option"
@@ -64,8 +65,7 @@ class SynonymTest(object, metaclass=ABCMeta):
     ]
 
     def __init__(self, name: str):
-        # The name of the test
-        self.name: str = name
+        super().__init__(name)
         self.questions: List[SynonymTest.Question] = self._load()
 
         # Check all questions have the same number of answers
@@ -76,9 +76,7 @@ class SynonymTest(object, metaclass=ABCMeta):
     def n_options(self) -> int:
         return len(self.questions[0].answers)
 
-    @classmethod
-    def questions_to_dataframe(cls, questions: List[SynonymTest.Question]) -> DataFrame:
-        """Convert a (number -> question) dict of questions to a dataframe"""
+    def questions_to_dataframe(self) -> DataFrame:
         return DataFrame.from_records(
             data=[
                 {
@@ -86,10 +84,10 @@ class SynonymTest(object, metaclass=ABCMeta):
                     SynonymTest.TestColumn.option: answer.word,
                     SynonymTest.TestColumn.is_correct: answer.is_correct,
                 }
-                for question in questions
+                for question in self.questions
                 for answer in question.answers
             ],
-            columns=cls.test_columns)
+            columns=SynonymTest.test_columns)
 
     @abstractmethod
     def _load(self) -> List[SynonymTest.Question]:
@@ -114,7 +112,6 @@ class ToeflTest(SynonymTest):
         super().__init__("TOEFL")
 
     def _load(self) -> List[SynonymTest.Question]:
-
         prompt_re = re.compile(r"^"
                                r"(?P<question_number>\d+)"
                                r"\.\s+"
@@ -269,44 +266,27 @@ class LbmMcqTest(SynonymTest):
         return questions
 
 
-class SynonymTester(object):
+class SynonymTester(Tester):
     """
     Administers synonym tests against models, saving all results as it goes.
     """
 
     def __init__(self, test: SynonymTest, save_progress: bool = True, force_reload: bool = False):
         self.test: SynonymTest = test
-        self._save_progress: bool = save_progress
+        super().__init__(save_progress, force_reload)
 
-        # Load existing data if any, else start afresh
-        self._data: DataFrame
-        if self._could_load_data() and not force_reload:
-            self._data = self._load_data()
-        else:
-            self._data = SynonymTest.questions_to_dataframe(self.test.questions)
+    @property
+    def _save_path(self) -> str:
+        return path.join(Preferences.synonym_results_dir, f"{self.test.name} data.csv")
 
-        if self._save_progress:
-            self._save_data()
+    def _fresh_data(self) -> DataFrame:
+        return self.test.questions_to_dataframe()
 
     def has_tested_model(self,
                          model: DistributionalSemanticModel,
                          distance_type: Optional[DistanceType] = None,
                          truncate_length: int = None) -> bool:
         return self.column_name_for_model(model, distance_type, truncate_length) in self._data.columns.values
-
-    def _could_load_data(self) -> bool:
-        return path.isfile(self._save_path)
-
-    def _load_data(self) -> DataFrame:
-        return read_csv(self._save_path, index_col=None)
-
-    def _save_data(self):
-        with open(self._save_path, mode="w", encoding="utf-8") as save_file:
-            self._data.to_csv(save_file, index=False)
-
-    @property
-    def _save_path(self) -> str:
-        return path.join(Preferences.synonym_results_dir, "data.csv")
 
     def column_name_for_model(self,
                               model: DistributionalSemanticModel,
@@ -418,7 +398,8 @@ class SynonymTester(object):
         }
 
     @staticmethod
-    def _validate_model_params(model, distance_type, truncate_vectors_at_length):
+    def _validate_model_params(model: DistributionalSemanticModel, distance_type: Optional[DistanceType],
+                               truncate_vectors_at_length: Optional[int]):
         if isinstance(model, NgramModel):
             assert distance_type is None
             assert truncate_vectors_at_length is None
