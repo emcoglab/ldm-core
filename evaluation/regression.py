@@ -219,6 +219,40 @@ class SppData(RegressionData):
         target_word   = "TargetWord"
         matched_prime = "MatchedPrime"
         prime_type    = "PrimeType"
+        # ldt
+        ldt_200_z = "LDT_200ms_Z"
+        ldt_200_ac = "LDT_200ms_Acc"
+        ldt_1200_z = "LDT_1200ms_Z"
+        ldt_1200_ac = "LDT_1200ms_Acc"
+        # nt
+        nt_200_z = "NT_200ms_Z"
+        nt_200_ac = "NT_200ms_Acc"
+        nt_1200_z = "NT_1200ms_Z"
+        nt_1200_ac = "NT_1200ms_Acc"
+        # ldt priming
+        ldt_200_z_priming = "LDT_200ms_Z_Priming"
+        ldt_200_ac_priming = "LDT_200ms_Acc_Priming"
+        ldt_1200_z_priming = "LDT_1200ms_Z_Priming"
+        ldt_1200_ac_priming = "LDT_1200ms_Acc_Priming"
+        # nt priming
+        nt_200_z_priming = "NT_200ms_Z_Priming"
+        nt_200_ac_priming = "NT_200ms_Acc_Priming"
+        nt_1200_z_priming = "NT_1200ms_Z_Priming"
+        nt_1200_ac_priming = "NT_1200ms_Acc_Priming"
+        # baseline
+        prime_length = "PrimeLength"
+        target_length = "TargetLength"
+        elex_prime_log_wf = "elex_prime_LgSUBTLWF"
+        elex_prime_old20 = "elex_prime_OLD"
+        elex_prime_pld20 = "elex_prime_PLD"
+        elex_prime_nsyll = "elex_prime_NSyll"
+        elex_target_log_wf = "elex_target_LgSUBTLWF"
+        elex_target_old20 = "elex_target_OLD"
+        elex_target_pld20 = "elex_target_PLD"
+        elex_target_nsyll = "elex_target_NSyll"
+        prime_target_old = "PrimeTarget_OrthLD"
+        # baseline priming
+        prime_target_old_priming = "PrimeTarget_OrthLD_Priming"
 
     def __init__(self,
                  save_progress: bool = True,
@@ -383,6 +417,17 @@ class CalgaryData(RegressionData):
         word = "Word"
         word_type = "WordType"
         accuracy = "ACC"
+        # data
+        zrt_mean = "zRTclean_mean"
+        concrete_response_proportion = "Concrete_response_proportion"
+        # baseline
+        elex_length = "elex_Length"
+        elex_log_wf = "elex_LgSUBTLWF"
+        elex_old20 = "elex_OLD"
+        elex_pld20 = "elex_PLD"
+        elex_nsyll = "elex_NSyll"
+        concrete_old = "concrete_OrthLD"
+        abstract_old = "abstract_OrthLD"
 
     def __init__(self,
                  save_progress: bool = True,
