@@ -377,6 +377,10 @@ class SynonymTester(Tester):
                        [model_distance_col_name])
         else:
             raise NotImplementedError()
+        # In case prompt word was not found (or all options not found), all associations could be nan, so the guess
+        # could be nan, which would cause a ValueError. So we drop any nans here (and the guess will be left as
+        # False => unguessed).
+        guesses.dropna(inplace=True)
         self._data[model_guess_col_name][guesses] = True
 
         # Mark guesses correct or not
