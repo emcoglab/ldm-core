@@ -99,5 +99,5 @@ class EvaluationResults(metaclass=ABCMeta):
         return read_csv(self._csv_path, converters={
             # Check if embedding size is the empty string,
             # as it would be for Count models
-            "Embedding size": lambda v: int(v) if len(v) > 0 else nan
+            "Embedding size": lambda v: int(float(v)) if len(v) > 0 else nan
         })
