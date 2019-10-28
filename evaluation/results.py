@@ -22,7 +22,8 @@ import os
 from abc import ABCMeta
 from typing import List, Optional
 
-import pandas
+from numpy import nan
+from pandas import DataFrame, read_csv
 
 from ..model.base import DistributionalSemanticModel
 from ..model.predict import PredictVectorModel
@@ -52,7 +53,7 @@ class EvaluationResults(metaclass=ABCMeta):
         self._save_dir: str = save_dir
         self._csv_path: str = os.path.join(self._save_dir, "evaluation_results.csv")
 
-        self.data: pandas.DataFrame = pandas.DataFrame(columns=self.model_index_column_names + results_column_names)
+        self.data: DataFrame = DataFrame(columns=self.model_index_column_names + results_column_names)
 
     @property
     def column_names(self):
@@ -92,3 +93,11 @@ class EvaluationResults(metaclass=ABCMeta):
             # We don't want to save the index, as it's not especially meaningful, and makes life harder when trying to
             # restore the binary version from the csv (the index column would be imported and then need to be dropped).
             self.data.to_csv(spp_file, index=False)
+
+    def load_to_dataframe(self) -> DataFrame:
+        """Whatever results have been saved, load those to a DataFrame."""
+        return read_csv(self._csv_path, converters={
+            # Check if embedding size is the empty string,
+            # as it would be for Count models
+            "Embedding size": lambda v: int(v) if len(v) > 0 else nan
+        })
