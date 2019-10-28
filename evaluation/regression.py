@@ -214,6 +214,11 @@ class SppData(RegressionData):
     """
     Semantic Priming Project data.
     """
+    class Columns:
+        prime_word    = "PrimeWord"
+        target_word   = "TargetWord"
+        matched_prime = "MatchedPrime"
+        prime_type    = "PrimeType"
 
     def __init__(self,
                  save_progress: bool = True,
@@ -231,7 +236,7 @@ class SppData(RegressionData):
         """
         assert self._all_data is not None
         results_csv_path = path if path is not None else os.path.join(self._results_dir, "model_predictors_first_associate_only.csv")
-        first_assoc_data = self._all_data.query('PrimeType == "first_associate"')
+        first_assoc_data = self._all_data.query(f'{SppData.Columns.prime_type} == "first_associate"')
         with open(results_csv_path, mode="w", encoding="utf-8") as results_file:
             first_assoc_data.to_csv(results_file)
 
@@ -240,19 +245,19 @@ class SppData(RegressionData):
         prime_target_data: DataFrame = read_csv(Preferences.spp_path_csv, header=0)
 
         # Convert all to strings (to avoid False becoming a bool 😭)
-        prime_target_data["TargetWord"] = prime_target_data["TargetWord"].apply(str)
-        prime_target_data["PrimeWord"] = prime_target_data["PrimeWord"].apply(str)
-        prime_target_data["MatchedPrime"] = prime_target_data["MatchedPrime"].apply(str)
+        prime_target_data[SppData.Columns.target_word] = prime_target_data[SppData.Columns.target_word].apply(str)
+        prime_target_data[SppData.Columns.prime_word] = prime_target_data[SppData.Columns.prime_word].apply(str)
+        prime_target_data[SppData.Columns.matched_prime] = prime_target_data[SppData.Columns.matched_prime].apply(str)
 
         # Convert all to lower case
-        prime_target_data["TargetWord"] = prime_target_data["TargetWord"].str.lower()
-        prime_target_data["PrimeWord"] = prime_target_data["PrimeWord"].str.lower()
-        prime_target_data["MatchedPrime"] = prime_target_data["MatchedPrime"].str.lower()
+        prime_target_data[SppData.Columns.target_word] = prime_target_data[SppData.Columns.target_word].str.lower()
+        prime_target_data[SppData.Columns.prime_word] = prime_target_data[SppData.Columns.prime_word].str.lower()
+        prime_target_data[SppData.Columns.matched_prime] = prime_target_data[SppData.Columns.matched_prime].str.lower()
 
         # For unrelated pairs, the Matched Prime column will now have the string "nan".
         # There are no legitimate cases of "nan" as a matched prime.
         # So we go through and remove this.
-        prime_target_data["MatchedPrime"].replace("nan", nan, inplace=True)
+        prime_target_data[SppData.Columns.matched_prime].replace("nan", nan, inplace=True)
 
         return prime_target_data
 
@@ -260,8 +265,8 @@ class SppData(RegressionData):
     def vocabulary(self) -> Set[str]:
         vocab: Set[str] = set()
 
-        vocab = vocab.union(set(self.dataframe["PrimeWord"]))
-        vocab = vocab.union(set(self.dataframe["TargetWord"]))
+        vocab = vocab.union(set(self.dataframe[SppData.Columns.prime_word]))
+        vocab = vocab.union(set(self.dataframe[SppData.Columns.target_word]))
 
         return vocab
 
@@ -270,7 +275,7 @@ class SppData(RegressionData):
         """
         Word pairs used in the SPP data.
         """
-        return self.dataframe.reset_index()[["PrimeWord", "TargetWord"]].values.tolist()
+        return self.dataframe.reset_index()[[SppData.Columns.prime_word, SppData.Columns.target_word]].values.tolist()
 
     @classmethod
     def predictor_name_for_model(cls,
@@ -347,11 +352,11 @@ class SppData(RegressionData):
             # We're assuming that the matched predictor has already been added, so we can safely join
             # on the matched prime pair here, since there'll be a PrimeWord-matched predictor there
             # already.
-            key_column = "MatchedPrime" if for_priming_effect else "PrimeWord"
+            key_column = SppData.Columns.matched_prime if for_priming_effect else SppData.Columns.prime_word
 
             # Add model distance column to data frame
             model_association = self.dataframe[
-                [key_column, "TargetWord"]
+                [key_column, SppData.Columns.target_word]
             ].apply(model_association_or_none, axis=1)
 
             if for_priming_effect:
@@ -374,6 +379,10 @@ class CalgaryData(RegressionData):
     """
     Calgary data.
     """
+    class Columns:
+        word = "Word"
+        word_type = "WordType"
+        accuracy = "ACC"
 
     def __init__(self,
                  save_progress: bool = True,
@@ -394,10 +403,10 @@ class CalgaryData(RegressionData):
         word_data = xls.parse("Sheet1")
 
         # Convert all to strings (to avoid False becoming a bool 😭)
-        word_data["Word"] = word_data["Word"].apply(str)
+        word_data[CalgaryData.Columns.word] = word_data[CalgaryData.Columns.word].apply(str)
 
         # Convert all to lower case
-        word_data["Word"] = word_data["Word"].str.lower()
+        word_data[CalgaryData.Columns.word] = word_data[CalgaryData.Columns.word].str.lower()
 
         return word_data
 
@@ -408,12 +417,12 @@ class CalgaryData(RegressionData):
 
         def concreteness_proportion(r) -> float:
             # If the word is Brysbaert-concrete, the accuracy equals the fraction of responders who decided "concrete"
-            if r["WordType"] == "Concrete":
-                return r["ACC"]
+            if r[CalgaryData.Columns.word_type] == "Concrete":
+                return r[CalgaryData.Columns.accuracy]
             # If the word is Brysbaert-abstract, the complement of the accuracy equals the fraction of responders who
             # decided "concrete"
             else:
-                return 1 - r["ACC"]
+                return 1 - r[CalgaryData.Columns.accuracy]
 
         def abstractness_proportion(r) -> float:
             return 1-concreteness_proportion(r)
@@ -435,10 +444,8 @@ class CalgaryData(RegressionData):
 
     @property
     def vocabulary(self) -> Set[str]:
-        """
-        The set of words used in the SPP data.
-        """
-        return set(self.dataframe["Word"])
+        """The set of words used in the SPP data."""
+        return set(self.dataframe[CalgaryData.Columns.word])
 
     @classmethod
     def predictor_name_for_model_min_distance(cls,
@@ -592,7 +599,9 @@ class CalgaryData(RegressionData):
                     return None
 
             # Add model distance column to data frame
-            self.dataframe[predictor_name] = self.dataframe["Word"].apply(fixed_model_association_or_none)
+            self.dataframe[predictor_name] = (
+                self.dataframe[CalgaryData.Columns.word]
+                .apply(fixed_model_association_or_none))
 
             # Save in current state
             if self._save_progress:
