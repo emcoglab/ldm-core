@@ -493,42 +493,6 @@ class CalgaryData(RegressionData):
         return set(self.dataframe[CalgaryData.Columns.word])
 
     @classmethod
-    def predictor_name_for_model_min_distance(cls,
-                                              model: DistributionalSemanticModel,
-                                              distance_type: Optional[DistanceType]) -> str:
-
-        if distance_type is None:
-            unsafe_name = f"{model.name}_min_distance"
-        else:
-            unsafe_name = f"{model.name}_{distance_type.name}_min_distance"
-
-        # Remove unsafe characters
-        unsafe_name = re.sub(r"[(),=]", "", unsafe_name)
-
-        # Convert hyphens and spaces to underscores
-        safe_name = re.sub(r"[-\s]", "_", unsafe_name)
-
-        return safe_name
-
-    @classmethod
-    def predictor_name_for_model_reference_difference(cls,
-                                                      model: DistributionalSemanticModel,
-                                                      distance_type: Optional[DistanceType]) -> str:
-
-        if distance_type is None:
-            unsafe_name = f"{model.name}_diff_distance"
-        else:
-            unsafe_name = f"{model.name}_{distance_type.name}_diff_distance"
-
-        # Remove unsafe characters
-        unsafe_name = re.sub(r"[(),=]", "", unsafe_name)
-
-        # Convert hyphens and spaces to underscores
-        safe_name = re.sub(r"[-\s]", "_", unsafe_name)
-
-        return safe_name
-
-    @classmethod
     def predictor_name_for_model_fixed_reference(cls,
                                                  model: DistributionalSemanticModel,
                                                  distance_type: Optional[DistanceType],
@@ -549,58 +513,6 @@ class CalgaryData(RegressionData):
     @property
     def reference_words(self) -> List[str]:
         return ["concrete", "abstract"]
-
-    def add_model_predictor_min_distance(self,
-                                         model: DistributionalSemanticModel,
-                                         distance_type: Optional[DistanceType]):
-        """
-        Adds column containing minimum distance to reference words.
-        Assumes that columns containing reference word distances already exist.
-        """
-
-        reference_predictor_names = [
-            self.predictor_name_for_model_fixed_reference(model, distance_type, reference_word)
-            for reference_word in self.reference_words
-        ]
-        min_predictor_name = self.predictor_name_for_model_min_distance(model, distance_type)
-
-        # Skip existing predictors
-        if self.predictor_exists_with_name(min_predictor_name):
-            logger.info(f"Model predictor '{min_predictor_name}' already added")
-            return
-
-        else:
-            logger.info(f"Adding '{min_predictor_name}' model predictor")
-
-            # Add model distance column to data frame
-            self.dataframe[min_predictor_name] = self.dataframe[reference_predictor_names].min(axis=1)
-
-            # Save in current state
-            if self._save_progress:
-                self.save()
-
-    def add_model_predictor_reference_difference(self,
-                                                 model: DistributionalSemanticModel,
-                                                 distance_type: Optional[DistanceType]):
-        """
-        Adds a column containing the difference between the distances of the two reference words.
-        """
-        diff_predictor_name = self.predictor_name_for_model_reference_difference(model, distance_type)
-
-        # Skip existing predictors
-        if self.predictor_exists_with_name(diff_predictor_name):
-            logger.info(f"Model predictor '{diff_predictor_name}' already added")
-            return
-
-        else:
-            logger.info(f"Adding '{diff_predictor_name}' model predictor")
-
-            # TODO: there must be a better way to do this than have it hard-coded...
-            self.dataframe[diff_predictor_name] = self.dataframe[self.predictor_name_for_model_fixed_reference(model, distance_type, "concrete")] - self.dataframe[self.predictor_name_for_model_fixed_reference(model, distance_type, "abstract")]
-
-            # Save in current state
-            if self._save_progress:
-                self.save()
 
     def add_model_predictor_fixed_reference(self,
                                             model: DistributionalSemanticModel,
