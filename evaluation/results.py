@@ -74,7 +74,6 @@ class EvaluationResults(metaclass=ABCMeta):
         """
         # Add model keys to result row
         result["Test name"] = test_name
-        # TODO: this is also gross
         result["Model type"] = model.model_type.name + (append_to_model_name if append_to_model_name is not None else "")
         result["Embedding size"] = model.embedding_size if isinstance(model, PredictVectorModel) else None
         result["Window radius"] = model.window_radius
@@ -83,7 +82,6 @@ class EvaluationResults(metaclass=ABCMeta):
 
         assert set(result.keys()) == set(self.column_names)
 
-        # TODO: This is possibly inefficient
         self.data = self.data.append(result, ignore_index=True)
 
     def save(self):

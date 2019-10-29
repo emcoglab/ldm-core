@@ -113,7 +113,7 @@ class LogNgramModel(NgramModel):
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist):
+                 freq_dist: FreqDist = None):
         super().__init__(VectorSemanticModel.ModelType.log_ngram,
                          LogCoOccurrenceCountModel(corpus_meta, window_radius, freq_dist))
 
@@ -127,7 +127,7 @@ class ProbabilityRatioNgramModel(NgramModel):
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist):
+                 freq_dist: FreqDist = None):
         super().__init__(VectorSemanticModel.ModelType.probability_ratio_ngram,
                          ProbabilityRatioModel(corpus_meta, window_radius, freq_dist))
 
@@ -141,7 +141,7 @@ class PMINgramModel(NgramModel):
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist):
+                 freq_dist: FreqDist = None):
         super().__init__(VectorSemanticModel.ModelType.pmi_ngram,
                          PMIModel(corpus_meta, window_radius, freq_dist))
 
@@ -155,6 +155,6 @@ class PPMINgramModel(NgramModel):
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist):
+                 freq_dist: FreqDist = None):
         super().__init__(VectorSemanticModel.ModelType.ppmi_ngram,
                          PPMIModel(corpus_meta, window_radius, freq_dist))

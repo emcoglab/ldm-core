@@ -50,10 +50,25 @@ class CountVectorModel(VectorSemanticModel):
                  model_type: DistributionalSemanticModel.ModelType,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist):
+                 freq_dist: FreqDist = None):
+        """
+        :param freq_dist: If provided (and not None) will be used, otherwise will be loaded as needed.
+        """
         super().__init__(model_type, corpus_meta, window_radius)
-        self.freq_dist: FreqDist = freq_dist
-        self.token_index: TokenIndex = TokenIndex.from_freqdist_ranks(freq_dist)
+        self._freq_dist: FreqDist = freq_dist  # backs self.freq_dist
+        self._token_index: TokenIndex = None  # backs self.token_index; will be set as needed
+
+    @property
+    def freq_dist(self) -> FreqDist:
+        if self._freq_dist is None:
+            self._freq_dist = FreqDist.load(self.corpus_meta.freq_dist_path)
+        return self._freq_dist
+
+    @property
+    def token_index(self) -> TokenIndex:
+        if self._token_index is None:
+            self._token_index = TokenIndex.from_freqdist_ranks(self.freq_dist)
+        return self._token_index
 
     @property
     def matrix(self) -> csr_matrix:
@@ -252,8 +267,8 @@ class UnsummedCoOccurrenceCountModel(CountVectorModel):
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist,
-                 chirality: Chirality):
+                 chirality: Chirality,
+                 freq_dist: FreqDist = None):
         super().__init__(DistributionalSemanticModel.ModelType.unsummed_cooccurrence,
                          corpus_meta, window_radius, freq_dist)
         self._chirality = chirality
@@ -339,7 +354,7 @@ class CoOccurrenceCountModel(CountVectorModel):
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist):
+                 freq_dist: FreqDist = None):
         super().__init__(VectorSemanticModel.ModelType.cooccurrence, corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):
@@ -354,7 +369,7 @@ class CoOccurrenceCountModel(CountVectorModel):
             # Accumulate both left and right occurrences
             for chirality in Chirality:
                 # Get each unsummed model
-                unsummed_model = UnsummedCoOccurrenceCountModel(self.corpus_meta, radius, self.freq_dist, chirality)
+                unsummed_model = UnsummedCoOccurrenceCountModel(self.corpus_meta, radius, chirality, self.freq_dist)
                 unsummed_model.train()
 
                 # And add it to the current matrix
@@ -378,7 +393,7 @@ class LogCoOccurrenceCountModel(CountVectorModel):
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist):
+                 freq_dist: FreqDist = None):
         super().__init__(VectorSemanticModel.ModelType.log_cooccurrence, corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):
@@ -408,7 +423,7 @@ class CoOccurrenceProbabilityModel(CountVectorModel):
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist):
+                 freq_dist: FreqDist = None):
         super().__init__(VectorSemanticModel.ModelType.cooccurrence_probability,
                          corpus_meta, window_radius, freq_dist)
 
@@ -441,7 +456,7 @@ class TokenProbabilityModel(CountScalarModel):
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist):
+                 freq_dist: FreqDist = None):
         super().__init__(VectorSemanticModel.ModelType.token_probability,
                          corpus_meta, window_radius, freq_dist)
 
@@ -473,7 +488,7 @@ class ConditionalProbabilityModel(CountVectorModel):
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist):
+                 freq_dist: FreqDist = None):
         super().__init__(VectorSemanticModel.ModelType.conditional_probability, corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):
@@ -521,7 +536,7 @@ class ContextProbabilityModel(CountScalarModel):
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist):
+                 freq_dist: FreqDist = None):
         super().__init__(VectorSemanticModel.ModelType.context_probability,
                          corpus_meta, window_radius, freq_dist)
 
@@ -552,7 +567,7 @@ class ProbabilityRatioModel(CountVectorModel):
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist):
+                 freq_dist: FreqDist = None):
         super().__init__(DistributionalSemanticModel.ModelType.probability_ratio, corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):
@@ -607,7 +622,7 @@ class PMIModel(CountVectorModel):
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist):
+                 freq_dist: FreqDist = None):
         super().__init__(DistributionalSemanticModel.ModelType.pmi, corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):
@@ -640,7 +655,7 @@ class PPMIModel(CountVectorModel):
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
-                 freq_dist: FreqDist):
+                 freq_dist: FreqDist = None):
         super().__init__(DistributionalSemanticModel.ModelType.ppmi, corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):

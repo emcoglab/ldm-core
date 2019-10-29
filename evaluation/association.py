@@ -309,7 +309,6 @@ class WordsimSimilarity(WordAssociationTest):
                               r"\s+"
                               r"(?P<word_2>[a-z]+)"  # The second concept in the pair.
                               r"\s+"
-                              # TODO: is it really in this range?
                               r"(?P<similarity>[0-9.]+)"  # The average similarity judgement.  In range [1, 10].
                               r"\s*$")
 
@@ -339,7 +338,6 @@ class WordsimRelatedness(WordAssociationTest):
                               r"\s+"
                               r"(?P<word_2>[a-z]+)"  # The second concept in the pair.
                               r"\s+"
-                              # TODO: is it really in this range? Does it matter?
                               r"(?P<relatedness>[0-9.]+)"  # The average relatedness judgement.  In range [1, 10].
                               r"\s*$")
 
