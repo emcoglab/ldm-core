@@ -131,11 +131,11 @@ class CountVectorModel(VectorSemanticModel):
             else:
                 model = self._model
 
-            # For cosine and euclidean, we can use the sparse matrix
+            # For cosine and euclidean, we can use the sparse matrix.
             if distance_type in [DistanceType.cosine, DistanceType.Euclidean]:
                 distances = squeeze(sparse_pairwise_distances(self.vector_for_word(word), model, metric=distance_type.name, n_jobs=-1))
 
-            # For correlation and minkowski-3 we can't.
+            # For correlation and Minkowski-3 we can't.
             # We can't convert self.model to dense as it's BIG (up to 10M), so we chunk self.model up and convert each
             # chunk to dense.
             else:

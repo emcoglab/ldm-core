@@ -553,7 +553,7 @@ class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
         v_2 = self.vector_for_word(word_2)
 
         # TODO: The vectors that come out of word2vec may not be like this, in which case this won't work.
-        # TODO: Verify!
+        # TODO: We're not using this, but verify anyway!
         if truncate_vectors_at_length is not None and truncate_vectors_at_length < v_1.shape[1]:
             v_1 = v_1[:, :truncate_vectors_at_length]
             v_2 = v_2[:, :truncate_vectors_at_length]
@@ -581,7 +581,7 @@ class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
                                                            for word in ngram_to_unigrams(multigram_2)))
 
         # TODO: The vectors that come out of word2vec may not be like this, in which case this won't work.
-        # TODO: Verify!
+        # TODO: We're not using this, but verify anyway!
         if truncate_vectors_at_length is not None and truncate_vectors_at_length < v_1.shape[1]:
             v_1 = v_1[:, :truncate_vectors_at_length]
             v_2 = v_2[:, :truncate_vectors_at_length]

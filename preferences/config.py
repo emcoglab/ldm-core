@@ -82,7 +82,7 @@ class Config(metaclass=UnsettableSingleton):
             raise ConfigKeyNotSetError()
 
     def value_by_key_path(self, *args):
-        # try with override
+        # try with override; revert to default
         try:
             return Config._get_value(self._config_override, *args)
         except ConfigKeyNotSetError:

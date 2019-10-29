@@ -53,7 +53,7 @@ def ngram_to_unigrams(ngram: str) -> List[str]:
 
 
 class VectorCombinatorType(Enum):
-    """An way of combining vectors for multiple words"""
+    """An way of combining vectors for multiple words."""
 
     additive = auto()
     multiplicative = auto()

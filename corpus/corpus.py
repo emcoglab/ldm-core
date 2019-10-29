@@ -14,28 +14,25 @@ caiwingfield.net
 2017
 ---------------------------
 """
+
 import glob
 import os
 
 
 class CorpusMetadata:
-    """
-    Corpus metadata.
-    """
-
+    """Corpus metadata."""
     def __init__(self, name, path, freq_dist_path=None):
         # The name of the corpus
         self.name = name
         # The path to the corpus
         self.path = path
-        # The path to the frequency distribution for the corpus
+        # The path to the frequency distribution for the corpus,
+        # used to canonically index the corpus's unique tokens
         self.freq_dist_path = freq_dist_path
 
 
 class StreamedCorpus(object):
-    """
-    Corpus which yields individual tokens.
-    """
+    """Corpus which yields individual tokens."""
 
     def __init__(self, metadata: CorpusMetadata):
         """
@@ -65,9 +62,7 @@ class StreamedCorpus(object):
 
 
 class WindowedCorpus(object):
-    """
-    Corpus presented through a sliding window.
-    """
+    """Corpus presented through a sliding window."""
 
     def __init__(self, metadata: CorpusMetadata, window_width: int):
         """
@@ -102,9 +97,7 @@ class WindowedCorpus(object):
 
 
 class BatchedCorpus(object):
-    """
-    Corpus which yields batches of tokens.
-    """
+    """Corpus which yields batches of tokens."""
 
     def __init__(self, metadata: CorpusMetadata, batch_size: int):
         """

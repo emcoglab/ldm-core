@@ -23,6 +23,7 @@ from ..corpus.corpus import CorpusMetadata
 class Preferences:
     """
     Preferences for models.
+    Set default values in default_config.yaml, or override with Config(use_config_overrides_from_file=...)
     """
 
     # Local import to prevent it being accidentally imported from this module

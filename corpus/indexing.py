@@ -80,6 +80,7 @@ class TokenIndex(object):
 class FreqDist(nltk.probability.FreqDist):
     """
     Extension of nltk.probability.FreqDist.
+    Allows easy saving and loading, and some other helper methods.
     """
 
     _file_extension = ".freqdist"
@@ -155,9 +156,7 @@ class LetterIndexing(object):
 
     @staticmethod
     def letter2int(letter: str) -> int:
-        """
-        Converts roman letters a, b, c, ... into integers 0, 1, 2, ...
-        """
+        """Converts roman letters a, b, c, ... into integers 0, 1, 2, ..."""
         assert len(letter) == 1
         i = LetterIndexing._the_alphabet.index(letter.lower())
         if i == -1:
@@ -166,7 +165,5 @@ class LetterIndexing(object):
 
     @staticmethod
     def int2letter(i: int) -> str:
-        """
-        Converts integers 0, 1, 2, ... into letters a, b, c, ...
-        """
+        """Converts integers 0, 1, 2, ... into letters a, b, c, ..."""
         return LetterIndexing._the_alphabet[i]

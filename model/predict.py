@@ -89,7 +89,8 @@ class PredictVectorModel(VectorSemanticModel):
     def _retrain(self):
         raise NotImplementedError()
 
-    def nearest_neighbours_with_distances(self, word: str, distance_type: DistanceType, n: int, only_consider_most_frequent: int = None):
+    def nearest_neighbours_with_distances(self, word: str, distance_type: DistanceType, n: int,
+                                          only_consider_most_frequent: int = None):
 
         if not self.contains_word(word):
             raise WordNotFoundError(f"The word '{word}' was not found.")

@@ -17,12 +17,8 @@ caiwingfield.net
 
 from abc import ABCMeta, abstractmethod
 from os import path
-from typing import Optional
 
 from pandas import DataFrame, read_csv
-
-from ldm.model.base import DistributionalSemanticModel
-from ldm.utils.maths import DistanceType
 
 
 class Test:
