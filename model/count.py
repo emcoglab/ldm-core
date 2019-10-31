@@ -90,7 +90,6 @@ class CountVectorModel(VectorSemanticModel):
             makedirs(self.save_dir)
         save_npz(path.join(self.save_dir, self._model_filename_with_ext), self._model, compressed=False)
 
-    # BUG: This appears to leak memory if used repeatedly :[
     def _load(self, memory_map: bool = False):
 
         # Use scipy.sparse.csr_matrix for trained models
@@ -198,16 +197,12 @@ class CountVectorModel(VectorSemanticModel):
         return nearest_neighbours
 
     def contains_word(self, word: str) -> bool:
-        if word.lower() in [token.lower() for token in self.token_index.token2id]:
-            return True
-        else:
-            return False
+        """Is the word in the corpus used to train the model?"""
+        return word.lower() in [token.lower() for token in self.token_index.token2id]
 
 
 class CountScalarModel(ScalarSemanticModel, metaclass=ABCMeta):
-    """
-    A context-counting language model where each word is associated with a scalar value.
-    """
+    """A context-counting language model where each word is associated with a scalar value."""
 
     def __init__(self,
                  model_type: DistributionalSemanticModel.ModelType,
@@ -253,10 +248,7 @@ class CountScalarModel(ScalarSemanticModel, metaclass=ABCMeta):
         return self._model[self.token_index.token2id[word]]
 
     def contains_word(self, word: str) -> bool:
-        if word.lower() in self.token_index.token2id:
-            return True
-        else:
-            return False
+        return word.lower() in self.token_index.token2id
 
 
 class UnsummedCoOccurrenceCountModel(CountVectorModel):

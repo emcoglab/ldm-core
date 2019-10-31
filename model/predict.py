@@ -31,9 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class PredictVectorModel(VectorSemanticModel):
-    """
-    A vector space model where words are predicted rather than counted.
-    """
+    """A vector space model where words are predicted rather than counted."""
     def __init__(self,
                  model_type: DistributionalSemanticModel.ModelType,
                  corpus_meta: CorpusMetadata,
@@ -146,9 +144,7 @@ class PredictVectorModel(VectorSemanticModel):
 
 
 class CbowModel(PredictVectorModel):
-    """
-    A vector space model trained using CBOW.
-    """
+    """A vector space model trained using CBOW."""
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
@@ -174,9 +170,7 @@ class CbowModel(PredictVectorModel):
 
 
 class SkipGramModel(PredictVectorModel):
-    """
-    A vector space model trained using Skip-gram.
-    """
+    """A vector space model trained using Skip-gram."""
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,

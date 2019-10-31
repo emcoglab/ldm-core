@@ -23,7 +23,7 @@ from abc import ABCMeta, abstractmethod
 from enum import Enum, auto
 from typing import List, Tuple
 
-import numpy
+from numpy import array
 
 from ..corpus.corpus import CorpusMetadata
 from ..corpus.multiword import VectorCombinatorType, multiword_combinator, ngram_to_unigrams
@@ -34,9 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 class DistributionalSemanticModel(metaclass=ABCMeta):
-    """
-    A model of the language.
-    """
+    """A distributional model of the language."""
 
     class MetaType(Enum):
         # vector models which count cooccurrences
@@ -344,48 +342,36 @@ class DistributionalSemanticModel(metaclass=ABCMeta):
     @property
     @abstractmethod
     def is_trained(self) -> bool:
-        """
-        True if the model the model data is present and ready to be queried.
-        """
+        """True iff the model the model data is present and ready to be queried."""
         raise NotImplementedError()
 
     @property
     def _root_dir(self) -> str:
-        """
-        The root directory for all models.
-        """
+        """The root directory for all models."""
         # We need to remember the root directory for all models, as well as the save directory for this model.
         # This allows us to instantiate and load other models from the correct root.
         return Preferences.model_dir
 
     @property
     def name(self) -> str:
-        """
-        The name of the model, containing all relevant information to disambiguate it from other models.
-        """
+        """The name of the model, containing all relevant information to disambiguate it from other models."""
         return f"{self.model_type.name} ({self.corpus_meta.name})"
 
     @property
     @abstractmethod
     def _model_filename(self) -> str:
-        """
-        The file name of the model, without file extension.
-        """
+        """The file name of the model, without file extension."""
         raise NotImplementedError()
 
     @property
     @abstractmethod
     def _model_ext(self) -> str:
-        """
-        The file extension of the model file.
-        """
+        """The file extension of the model file."""
         raise NotImplementedError()
 
     @property
     def _model_filename_with_ext(self) -> str:
-        """
-        The filename of the model, with extension
-        """
+        """The filename of the model, with extension."""
         return self._model_filename + self._model_ext
 
     @property
@@ -394,9 +380,7 @@ class DistributionalSemanticModel(metaclass=ABCMeta):
 
     @property
     def could_load(self) -> bool:
-        """
-        Whether or not a previously saved model exists on the drive.
-        """
+        """Whether or not a previously saved model exists on the drive."""
         return os.path.isfile(os.path.join(self.save_dir, self._model_filename_with_ext))
 
     def train(self, force_retrain: bool = False, memory_map: bool = False):
@@ -421,44 +405,32 @@ class DistributionalSemanticModel(metaclass=ABCMeta):
 
     @abstractmethod
     def untrain(self):
-        """
-        Returns this model to its untrained state, so its memory is released.
-        """
+        """Returns this model to its untrained state, so its memory is released."""
         raise NotImplementedError()
 
     @abstractmethod
     def _retrain(self):
-        """
-        Retrains a model from scratch.
-        """
+        """Retrains a model from scratch."""
         raise NotImplementedError()
 
     @abstractmethod
     def _load(self, memory_map: bool = False):
-        """
-        Loads a model.
-        """
+        """Loads a model."""
         raise NotImplementedError()
 
     @abstractmethod
     def _save(self):
-        """
-        Saves a model in its current state.
-        """
+        """Saves a model in its current state."""
         raise NotImplementedError()
 
     @abstractmethod
     def contains_word(self, word: str) -> bool:
-        """
-        Whether the model is trained on a corpus containing a specific word.
-        """
+        """Whether the model is trained on a corpus containing a specific word."""
         raise NotImplementedError()
 
 
 class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
-    """
-    A language model where each word is associated with a point in a vector space.
-    """
+    """A language model where each word is associated with a point in a vector space."""
 
     def __init__(self,
                  model_type: DistributionalSemanticModel.ModelType,
@@ -502,7 +474,7 @@ class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
         Finds the nearest neighbours to a word.
         :param word:
         :param distance_type:
-        :param n:
+        :param n: number of nearest neighbours
         :param only_consider_most_frequent: Set to None to consider all, otherwise only consider n most frequent words
         """
         return [
@@ -521,7 +493,7 @@ class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
         Finds the nearest neighbours to a word.
         :param word:
         :param distance_type:
-        :param n:
+        :param n: number of nearest neighbours
         :param only_consider_most_frequent: Set to None to consider all, otherwise only consider n most frequent words
         :return Ordered list of word–distance pairs.
         :raises WordNotFoundError
@@ -529,24 +501,14 @@ class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
         raise NotImplementedError()
 
     def nearest_neighbour(self, word: str, distance_type: DistanceType):
-        """
-        Finds the nearest neighbour to a word.
-        :param word:
-        :param distance_type:
-        :return:
-        """
+        """Finds the nearest neighbour to a word."""
         return self.nearest_neighbours(word, distance_type, 1)[0]
 
     def distance_between(self, word_1, word_2,
                          distance_type: DistanceType,
                          truncate_vectors_at_length: int = None) -> float:
         """
-        Returns the distance between the two specified words
-        :param word_1:
-        :param word_2:
-        :param distance_type:
-        :param truncate_vectors_at_length:
-        :return:
+        Returns the distance between the two specified words.
         :raises: WordNotFoundError
         """
         v_1 = self.vector_for_word(word_1)
@@ -575,9 +537,9 @@ class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
         :raises: WordNotFoundError
         """
         # Unnecessarily functional-programming way of combining unigram vectors for ngrams.
-        v_1 = multiword_combinator(combinator_type, *tuple(numpy.array(self.vector_for_word(word))
+        v_1 = multiword_combinator(combinator_type, *tuple(array(self.vector_for_word(word))
                                                            for word in ngram_to_unigrams(multigram_1)))
-        v_2 = multiword_combinator(combinator_type, *tuple(numpy.array(self.vector_for_word(word))
+        v_2 = multiword_combinator(combinator_type, *tuple(array(self.vector_for_word(word))
                                                            for word in ngram_to_unigrams(multigram_2)))
 
         # TODO: The vectors that come out of word2vec may not be like this, in which case this won't work.
@@ -590,9 +552,7 @@ class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
 
 
 class ScalarSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
-    """
-    A language model where each word is associated with a scalar value.
-    """
+    """A language model where each word is associated with a scalar value."""
 
     def __init__(self,
                  model_type: DistributionalSemanticModel.ModelType,
@@ -602,7 +562,7 @@ class ScalarSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
         self.window_radius = window_radius
 
         # When implementing this class, this must be set by retrain()
-        self._model: numpy.ndarray = None
+        self._model: array = None
 
     @property
     def is_trained(self) -> bool:
@@ -622,7 +582,5 @@ class ScalarSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
 
     @abstractmethod
     def scalar_for_word(self, word: str):
-        """
-        Returns the scalar value for a word.
-        """
+        """Returns the scalar value for a word."""
         raise NotImplementedError()
