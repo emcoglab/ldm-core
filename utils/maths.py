@@ -19,11 +19,10 @@ from __future__ import annotations
 
 from enum import Enum, auto
 
-import nltk
-import numpy
-from numpy import log
-from scipy import spatial
-from scipy.spatial.distance import minkowski
+from nltk import edit_distance
+from numpy import array, log, exp, corrcoef, where
+from numpy.linalg import norm
+from scipy.spatial.distance import minkowski as minkowski_distance, cosine as cosine_distance
 from scipy.special import beta as beta_function
 from scipy.stats import beta as beta_distribution
 
@@ -89,7 +88,7 @@ class DistanceType(Enum):
             raise NotImplementedError(name)
 
 
-def distance(u: numpy.ndarray, v: numpy.ndarray, distance_type: DistanceType) -> float:
+def distance(u: array, v: array, distance_type: DistanceType) -> float:
     """
     Distance from vector u to vector v using the specified distance type.
     """
@@ -106,34 +105,34 @@ def distance(u: numpy.ndarray, v: numpy.ndarray, distance_type: DistanceType) ->
         raise ValueError()
 
 
-def _euclidean_distance(u: numpy.ndarray, v: numpy.ndarray):
+def _euclidean_distance(u: array, v: array):
     """
     Euclidean distance.
     :param u:
     :param v:
     :return:
     """
-    return numpy.linalg.norm(u - v)
+    return norm(u - v)
 
 
-def _cosine_distance(u: numpy.ndarray, v: numpy.ndarray):
+def _cosine_distance(u: array, v: array):
     """
     Cosine distance.
     :param u:
     :param v:
     :return:
     """
-    return spatial.distance.cosine(u, v)
+    return cosine_distance(u, v)
 
 
-def _correlation_distance(u: numpy.ndarray, v: numpy.ndarray):
+def _correlation_distance(u: array, v: array):
     """
     Correlation distance.
     :param u:
     :param v:
     :return:
     """
-    r = numpy.corrcoef(u, v)[0, 1]
+    r = corrcoef(u, v)[0, 1]
     return 1 - r
 
 
@@ -145,7 +144,7 @@ def _minkowski_distance(u, v, p):
     :param p:
     :return:
     """
-    return minkowski(u, v, p)
+    return minkowski_distance(u, v, p)
 
 
 def sparse_max(a, b):
@@ -158,7 +157,7 @@ def sparse_max(a, b):
     b_is_bigger = a - b
     # Pycharm gets type inference wrong here, I'm pretty sure
     # noinspection PyTypeChecker
-    b_is_bigger.data = numpy.where(b_is_bigger.data < 0, 1, 0)
+    b_is_bigger.data = where(b_is_bigger.data < 0, 1, 0)
 
     # Return elements of a where a was bigger, and elements of b where b was bigger
     return a - a.multiply(b_is_bigger) + b.multiply(b_is_bigger)
@@ -168,9 +167,9 @@ def levenshtein_distance(string_1: str, string_2: str) -> float:
     """
     Levenshtein edit distance between two strings.
     """
-    return nltk.edit_distance(string_1, string_2,
-                              substitution_cost=1,
-                              transpositions=False)
+    return edit_distance(string_1, string_2,
+                         substitution_cost=1,
+                         transpositions=False)
 
 
 def magnitude_of_negative(c):
@@ -221,7 +220,7 @@ def binomial_bayes_factor_one_sided(n, k, p0, alternative_hypothesis=">", a=1, b
 
     log_m_likelihood_h1 = term_1 - term_2
 
-    b10 = numpy.exp(log_m_likelihood_h1 - log_m_likelihood_h0)
+    b10 = exp(log_m_likelihood_h1 - log_m_likelihood_h0)
 
     return b10
 
@@ -247,7 +246,7 @@ def binomial_bayes_factor_two_sided(n, k, p0, a=1, b=1):
     else:
         log_b10 = log(beta_function(k + a, n - k + b)) - log(beta_function(a, b)) - k * log(p0) - (n - k) * log(1 - p0)
 
-    b10 = numpy.exp(log_b10)
+    b10 = exp(log_b10)
 
     return b10
 
