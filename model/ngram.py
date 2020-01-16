@@ -74,6 +74,9 @@ class NgramModel(DistributionalSemanticModel, metaclass=ABCMeta):
     def _load(self, memory_map: bool = False):
         self.underlying_count_model._load(memory_map)
 
+    def could_load(self) -> bool:
+        return self.underlying_count_model.could_load
+
     def contains_word(self, word: str) -> bool:
         return self.underlying_count_model.contains_word(word)
 
