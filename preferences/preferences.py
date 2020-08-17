@@ -18,6 +18,7 @@ from collections import namedtuple
 from os import path
 
 from ..corpus.corpus import CorpusMetadata
+from ..utils.maths import DistanceType
 
 
 class Preferences:
@@ -107,6 +108,9 @@ class Preferences:
 
     # We will test models with windows of each of these radii
     window_radii = [1, 3, 5, 10]
+
+    # Distance types to be used for analysis
+    distance_types = [DistanceType.cosine, DistanceType.correlation, DistanceType.Euclidean]
 
     # For the predict models, we will test a number of different embedding sizes
     # These sizes taken from Mandera et al. (2017)
