@@ -314,6 +314,44 @@ class DistributionalSemanticModel(metaclass=ABCMeta):
                 raise ValueError()
 
         @classmethod
+        def from_name(cls, name: str) -> DistributionalSemanticModel.ModelType:
+            if name == "CBOW":
+                return DistributionalSemanticModel.ModelType.cbow
+            elif name == "Skip-gram":
+                return DistributionalSemanticModel.ModelType.skip_gram
+            elif name == "co-occurrence (unsummed)":
+                # TODO: these should be capitalised for consistency, but this will require editing and renaming results file
+                return DistributionalSemanticModel.ModelType.unsummed_cooccurrence
+            elif name == "co-occurrence":
+                return DistributionalSemanticModel.ModelType.cooccurrence
+            elif name == "log co-occurrence":
+                return DistributionalSemanticModel.ModelType.log_cooccurrence
+            elif name == "co-occurrence probability":
+                return DistributionalSemanticModel.ModelType.cooccurrence_probability
+            elif name == "Token probability":
+                return DistributionalSemanticModel.ModelType.token_probability
+            elif name == "Context probability":
+                return DistributionalSemanticModel.ModelType.context_probability
+            elif name == "Conditional probability":
+                return DistributionalSemanticModel.ModelType.conditional_probability
+            elif name == "Probability ratio":
+                return DistributionalSemanticModel.ModelType.probability_ratio
+            elif name == "PMI":
+                return DistributionalSemanticModel.ModelType.pmi
+            elif name == "PPMI":
+                return DistributionalSemanticModel.ModelType.ppmi
+            elif name == "log n-gram":
+                return DistributionalSemanticModel.ModelType.log_ngram
+            elif name == "Probability ratio n-gram":
+                return DistributionalSemanticModel.ModelType.probability_ratio_ngram
+            elif name == "PMI n-gram":
+                return DistributionalSemanticModel.ModelType.pmi_ngram
+            elif name == "PPMI n-gram":
+                return DistributionalSemanticModel.ModelType.ppmi_ngram
+            else:
+                raise ValueError()
+
+        @classmethod
         def predict_types(cls):
             """
             Lists the predict types.
