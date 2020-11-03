@@ -27,12 +27,12 @@ class Test:
 
 
 class Tester(metaclass=ABCMeta):
-    def __init__(self, save_progress: bool = True, force_reload: bool = False):
+    def __init__(self, save_progress: bool = True, force_refresh: bool = False):
         self._save_progress: bool = save_progress
 
         # Load existing data if any, else start afresh
         self._data: DataFrame
-        if self._could_load_data() and not force_reload:
+        if self._could_load_data() and not force_refresh:
             self._data = self._load_data()
         else:
             self._data = self._fresh_data()

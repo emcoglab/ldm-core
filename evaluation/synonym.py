@@ -266,9 +266,9 @@ class SynonymTester(Tester):
     Administers synonym tests against models, saving all results as it goes.
     """
 
-    def __init__(self, test: SynonymTest, save_progress: bool = True, force_reload: bool = False):
+    def __init__(self, test: SynonymTest, save_progress: bool = True, force_refresh: bool = False):
         self.test: SynonymTest = test
-        super().__init__(save_progress, force_reload)
+        super().__init__(save_progress, force_refresh)
 
     @property
     def _save_path(self) -> str:

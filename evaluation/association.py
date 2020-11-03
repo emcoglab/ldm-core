@@ -94,9 +94,9 @@ class AssociationTester(Tester):
     """
     Administers a word-association test against a model.
     """
-    def __init__(self, test: WordAssociationTest, save_progress: bool = True, force_reload: bool = False):
+    def __init__(self, test: WordAssociationTest, save_progress: bool = True, force_refresh: bool = False):
         self.test: WordAssociationTest = test
-        super().__init__(save_progress, force_reload)
+        super().__init__(save_progress, force_refresh)
 
     def _fresh_data(self) -> DataFrame:
         return self.test.associations_to_dataframe()
@@ -154,8 +154,6 @@ class AssociationTester(Tester):
             except WordNotFoundError:
                 return numpy.nan
 
-        results = AssociationResults()
-
         self._data[model_distance_col_name] = self._data[
             [WordAssociationTest.TestColumn.word_1, WordAssociationTest.TestColumn.word_2]
         ].apply(association_or_nan, axis=1)
@@ -200,6 +198,8 @@ class AssociationTester(Tester):
             local_data["model"] = local_data["model"].rank()
 
         # Compare variance explained (correlation squared) with two predictors versus one predictor (intercept)
+        # To make data comparable, we need to drop rows with no model prediction
+        local_data.dropna(subset=["model"], inplace=True)
         model_bic    = sm.ols(formula="human ~ model", data=local_data).fit().bic
         baseline_bic = sm.ols(formula="human ~ 1",     data=local_data).fit().bic
         b10_approx   = numpy.exp((baseline_bic - model_bic) / 2)
