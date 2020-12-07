@@ -27,7 +27,7 @@ from scipy.spatial import distance_matrix as minkowski_distance_matrix
 from scipy.spatial.distance import cdist as distance_matrix
 from sklearn.metrics import pairwise_distances as sparse_pairwise_distances
 
-from ldm.utils.lists import chunks
+from ..utils.lists import chunks
 from .base import VectorSemanticModel, DistributionalSemanticModel, ScalarSemanticModel
 from ..corpus.corpus import CorpusMetadata, WindowedCorpus
 from ..corpus.indexing import FreqDist, TokenIndex

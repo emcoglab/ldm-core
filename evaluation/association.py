@@ -62,7 +62,6 @@ class WordAssociationTest(Test, metaclass=ABCMeta):
 
     def __init__(self, name: str):
         super().__init__(name)
-        # Backs self.association_list
         self.associations: List[WordAssociationTest.WordAssociation] = self._load()
 
     def associations_to_dataframe(self) -> DataFrame:
@@ -268,9 +267,10 @@ class SimlexSimilarity(WordAssociationTest):
         return associations
 
 
+# TODO: rename to "MenRelatedness"
 class MenSimilarity(WordAssociationTest):
     """
-    MEN similarity judgements.
+    MEN relatedness judgements.
     From: Bruni, E., Tran, NK., Baroni, M. "Multimodal Distributional Semantics". J. AI Research. 49:1--47 (2014).
     """
     def __init__(self):
@@ -354,6 +354,17 @@ class WordsimRelatedness(WordAssociationTest):
                         float(entry_match.group("relatedness"))))
 
         return judgements
+
+
+class WordsimAll(WordAssociationTest):
+    """WordSim-353 all judgements."""
+    def __init__(self):
+        super().__init__("WordSim-353 all")
+
+    def _load(self) -> List[WordAssociationTest.WordAssociation]:
+        similarity_associations = WordsimSimilarity().associations
+        relatedness_associations = WordsimRelatedness().associations
+        return similarity_associations + relatedness_associations
 
 
 class ColourEmotionAssociation(WordAssociationTest):
