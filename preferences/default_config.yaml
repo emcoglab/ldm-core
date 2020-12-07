@@ -9,86 +9,86 @@ corpora:
   # The three main corpora
   bnc:
     name:  "BNC"
-    path:  "/Volumes/Data/corpora/BNC/2 Tokenised/BNC.corpus"
-    index: "/Volumes/Data/indexes/BNC.freqdist"
+    path:  "/Volumes/Big Data/corpora/BNC/2 Tokenised/BNC.corpus"
+    index: "/Volumes/Big Data/indexes/BNC.freqdist"
   subtitles:
     name:  "BBC"
-    path:  "/Volumes/Data/corpora/BBC/4 Tokenised/BBC.corpus"
-    index: "/Volumes/Data/indexes/BBC.freqdist"
+    path:  "/Volumes/Big Data/corpora/BBC/4 Tokenised/BBC.corpus"
+    index: "/Volumes/Big Data/indexes/BBC.freqdist"
   ukwac:
     name:  "UKWAC"
-    path:  "/Volumes/Data/corpora/UKWAC/3 Tokenised/UKWAC.corpus"
-    index: "/Volumes/Data/indexes/UKWAC.freqdist"
+    path:  "/Volumes/Big Data/corpora/UKWAC/3 Tokenised/UKWAC.corpus"
+    index: "/Volumes/Big Data/indexes/UKWAC.freqdist"
 
   # Other corpora
   bnc-text:
     name:  "BNC-text"
-    path:  "/Volumes/Data/corpora/BNC-text/2 Tokenised/BNC-text.corpus"
-    index: "/Volumes/Data/indexes/BNC_text.freqdist"
+    path:  "/Volumes/Big Data/corpora/BNC-text/2 Tokenised/BNC-text.corpus"
+    index: "/Volumes/Big Data/indexes/BNC_text.freqdist"
   bnc-speech:
     name:  "BNC-speech"
-    path:  "/Volumes/Data/corpora/BNC-speech/2 Tokenised/BNC-text.corpus"
-    index: "/Volumes/Data/indexes/BNC_speech.freqdist"
+    path:  "/Volumes/Big Data/corpora/BNC-speech/2 Tokenised/BNC-text.corpus"
+    index: "/Volumes/Big Data/indexes/BNC_speech.freqdist"
 
   # Previous processing steps
   # bnc
   bnc-raw:
     name:  "BNC"
-    path:  "/Volumes/Data/corpora/BNC/0 XML version/Texts"
+    path:  "/Volumes/Big Data/corpora/BNC/0 XML version/Texts"
   bnc-detagged:
     name:  "BNC"
-    path:  "/Volumes/Data/corpora/BNC/1 Detagged"
+    path:  "/Volumes/Big Data/corpora/BNC/1 Detagged"
   # bnc-text
   bnc-text-raw:
     name:  "BNC-text"
-    path:  "/Volumes/Data/corpora/BNC-text/0 XML version"
+    path:  "/Volumes/Big Data/corpora/BNC-text/0 XML version"
   bnc-text-detagged:
     name:  "BNC-text"
-    path:  "/Volumes/Data/corpora/BNC-text/1 Detagged"
+    path:  "/Volumes/Big Data/corpora/BNC-text/1 Detagged"
   # bnc-speech
   bnc-speech-raw:
     name:  "BNC-speech"
-    path:  "/Volumes/Data/corpora/BNC-speech/0 XML version"
+    path:  "/Volumes/Big Data/corpora/BNC-speech/0 XML version"
   bnc-speech-detagged:
     name:  "BNC-speech"
-    path:  "/Volumes/Data/corpora/BNC-speech/1 Detagged"
+    path:  "/Volumes/Big Data/corpora/BNC-speech/1 Detagged"
   # subtitles
   subtitles-raw:
     name:  "BBC"
-    path:  "/Volumes/Data/corpora/BBC/0 Raw"
+    path:  "/Volumes/Big Data/corpora/BBC/0 Raw"
   subtitles-no-srt:
     name:  "BBC"
-    path:  "/Volumes/Data/corpora/BBC/1 No srt formatting"
+    path:  "/Volumes/Big Data/corpora/BBC/1 No srt formatting"
   subtitles-no-nonspeech:
     name:  "BBC"
-    path:  "/Volumes/Data/corpora/BBC/2 No nonspeech"
+    path:  "/Volumes/Big Data/corpora/BBC/2 No nonspeech"
   subtitles-replaced-symbols:
     name:  "BBC"
-    path:  "/Volumes/Data/corpora/BBC/3 Replaced symbols"
+    path:  "/Volumes/Big Data/corpora/BBC/3 Replaced symbols"
   # ukwac
   ukwac-raw:
     name: "UKWAC"
-    path: "/Volumes/Data/corpora/UKWAC/0 Raw untagged/cleaned_pre.pos.corpus"
+    path: "/Volumes/Big Data/corpora/UKWAC/0 Raw untagged/cleaned_pre.pos.corpus"
   ukwac-no-urls:
     name: "UKWAC"
-    path: "/Volumes/Data/corpora/UKWAC/1 Text only/cleaned_pre.pcorpus"
+    path: "/Volumes/Big Data/corpora/UKWAC/1 Text only/cleaned_pre.pcorpus"
   ukwac-partitioned:
     name: "UKWAC"
-    path: "/Volumes/Data/corpora/UKWAC/2 Partitioned"
+    path: "/Volumes/Big Data/corpora/UKWAC/2 Partitioned"
 
 # Locations of files relevant to each model
 models:
   # The directory where all models live.  Within this directory, models must be arranged in the following manner:
   #
   #   <directory>/<model-name>/<*model-files>
-  directory: "/Volumes/Data/vectors/"
+  directory: "/Volumes/Big Data/vectors/"
 
 # Locations of files relevant to tests
 tests:
-  directory: "/Volumes/Data/ldm evaluation/tests/"
+  directory: "/Volumes/Big Data/ldm evaluation/tests/"
 
 # Locations of results to be saved
 results:
-  directory: "/Volumes/Data/ldm evaluation/results/"
-  figures-directory: "/Volumes/Data/ldm evaluation/figures/"
-  summary-directory: "/Volumes/Data/ldm evaluation/summary"
+  directory: "/Volumes/Big Data/ldm evaluation/results/"
+  figures-directory: "/Volumes/Big Data/ldm evaluation/figures/"
+  summary-directory: "/Volumes/Big Data/ldm evaluation/summary"
