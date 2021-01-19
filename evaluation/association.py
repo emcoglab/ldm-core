@@ -327,6 +327,35 @@ class WordsimSimilarity(WordAssociationTest):
         return judgements
 
 
+class RelRelatedness(WordAssociationTest):
+    """Rel-122 relatedness judgements."""
+    def __init__(self):
+        super().__init__("Rel-122 relatedness")
+
+    def _load(self) -> List[WordAssociationTest.WordAssociation]:
+        entry_re = re.compile(r"^"
+                              r"(?P<relatedness>[0-9.]+)"  # The average relatedness judgement
+                              r"\s+"
+                              r"(?P<word_1>[a-z\- ]+)"  # The first concept in the pair
+                              r"\s--\s"
+                              r"(?P<word_2>[a-z\- ]+)"  # The second concept in the pair
+                              r"\s*$")
+
+        with open(Preferences.rel_path, mode="r", encoding="utf-8") as rel_file:
+            judgements = []
+            for line_i, line in enumerate(rel_file):
+                entry_match = re.match(entry_re, line)
+                if entry_match:
+                    judgements.append(WordAssociationTest.WordAssociation(
+                        entry_match.group("word_1"),
+                        entry_match.group("word_2"),
+                        float(entry_match.group("relatedness"))
+                    ))
+                else:
+                    logger.warning(f"No match found on line {line_i}")
+        return judgements
+
+
 class WordsimRelatedness(WordAssociationTest):
     """WordSim-353 relatedness judgements."""
     def __init__(self):
