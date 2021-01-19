@@ -136,6 +136,7 @@ class Preferences:
     wordsim_relatedness_path  = path.join(test_dir, "WordSim353", "wordsim_relatedness_goldstandard.txt")
     men_path                  = path.join(test_dir, "MEN BrEng", "MEN_dataset_natural_form_full")
     rel_path                  = path.join(test_dir, "Rel-122", "rel122-norms.txt")
+    rg65_path                 = path.join(test_dir, "RubensteinGoodenough", "rg65.csv")
     # word association production
     colour_association_path   = path.join(test_dir, "Colour association", "Appendix 1 (cleaned).csv")
     thematic_association_path = path.join(test_dir, "Thematic relatedness", "13428_2015_679_MOESM2_ESM (corrected).csv")
