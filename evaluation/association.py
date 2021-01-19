@@ -376,6 +376,26 @@ class RubensteinGoodenough(WordAssociationTest):
         return assocs
 
 
+class MillerCharlesSimilarity(WordAssociationTest):
+    """Miller & Charles (1991) semantic similarity test."""
+    def __init__(self):
+        super().__init__("Miller & Charles")
+
+    def _load(self) -> List[WordAssociationTest.WordAssociation]:
+        with open(Preferences.rg65_path, mode="r", encoding="utf-8") as rg65_file:
+            # Skip header line
+            rg65_file.readline()
+            assocs = []
+            for line in rg65_file:
+                parts = line.split(",")
+                assocs.append(WordAssociationTest.WordAssociation(
+                    parts[0].lower().strip(),  # word 1
+                    parts[1].lower().strip(),  # word 2
+                    float(parts[2].strip()),  # judged synonymy
+                ))
+        return assocs
+
+
 class WordsimRelatedness(WordAssociationTest):
     """WordSim-353 relatedness judgements."""
     def __init__(self):
