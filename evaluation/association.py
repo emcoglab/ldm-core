@@ -382,7 +382,7 @@ class MillerCharlesSimilarity(WordAssociationTest):
         super().__init__("Miller & Charles")
 
     def _load(self) -> List[WordAssociationTest.WordAssociation]:
-        with open(Preferences.rg65_path, mode="r", encoding="utf-8") as rg65_file:
+        with open(Preferences.miller_charles_path, mode="r", encoding="utf-8") as rg65_file:
             # Skip header line
             rg65_file.readline()
             assocs = []
