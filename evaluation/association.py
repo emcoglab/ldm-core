@@ -22,6 +22,7 @@ import re
 import csv
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
+from enum import Enum
 from typing import List, Optional
 from os import path
 
@@ -354,6 +355,40 @@ class RelRelatedness(WordAssociationTest):
                 else:
                     logger.warning(f"No match found on line {line_i}")
         return judgements
+
+
+class SmallWorldOfWords(WordAssociationTest):
+    """de Deyne et al.'s "Small World of Words" data."""
+
+    class ResponsesType(Enum):
+        # Just first responses
+        R1   = 1
+        # All three responses
+        R123 = 2
+
+    def __init__(self, responses_type: SmallWorldOfWords.ResponsesType):
+        self._responses_type = responses_type
+        super().__init__(f"Small World of Words {self._responses_type.name}")
+
+    def _load(self):
+        if self._responses_type == SmallWorldOfWords.ResponsesType.R1:
+            file_path = Preferences.swow_r1_path
+        elif self._responses_type == SmallWorldOfWords.ResponsesType.R123:
+            file_path = Preferences.swow_r123_path
+        else:
+            raise NotImplementedError()
+        with open(file_path, mode="r", encoding="utf-8") as swow_file:
+            # Skip header line
+            swow_file.readline()
+            assocs = []
+            for line in swow_file:
+                parts = line.split("\t")
+                assocs.append(WordAssociationTest.WordAssociation(
+                    parts[0].lower().strip(),  # word 1
+                    parts[1].lower().strip(),  # word 2
+                    float(parts[4]),  # R123.Strength
+                ))
+        return assocs
 
 
 class RubensteinGoodenough(WordAssociationTest):
