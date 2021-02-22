@@ -253,6 +253,9 @@ class SppData(RegressionData):
         prime_target_old = "PrimeTarget_OrthLD"
         # baseline priming
         prime_target_old_priming = "PrimeTarget_OrthLD_Priming"
+        # pos
+        prime_pos = "PrimePOS"
+        target_pos = "TargetPOS"
 
     def __init__(self,
                  save_progress: bool = True,
