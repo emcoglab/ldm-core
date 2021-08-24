@@ -83,10 +83,13 @@ class WordAssociationTest(Test, metaclass=ABCMeta):
 
     @dataclass
     class WordAssociation(object):
-        """A judgement of the similarity between two words."""
+        """A judgement of the association between two words."""
         word_1: str
         word_2: str
         association_strength: float
+
+        def __str__(self):
+            return f"{self.word_1}, {self.word_2}: {self.association_strength}"
 
 
 # Static class
@@ -466,9 +469,25 @@ class WordsimAll(WordAssociationTest):
         super().__init__("WordSim-353 all")
 
     def _load(self) -> List[WordAssociationTest.WordAssociation]:
-        similarity_associations = WordsimSimilarity().associations
-        relatedness_associations = WordsimRelatedness().associations
-        return similarity_associations + relatedness_associations
+        entry_re = re.compile(r"^"
+                              r"(?P<word_1>[a-z]+)"  # The first concept in the pair.
+                              r","
+                              r"(?P<word_2>[a-z]+)"  # The second concept in the pair.
+                              r","
+                              r"(?P<relatedness>[0-9.]+)"  # The average relatedness judgement.  In range [1, 10].
+                              r"\s*$")
+        with open(Preferences.wordsim_all_path, mode="r", encoding="utf-8") as wordsim_file:
+            # Skip header line
+            wordsim_file.readline()
+            judgements = []
+            for line in wordsim_file:
+                entry_match = re.match(entry_re, line.lower())
+                if entry_match:
+                    judgements.append(WordAssociationTest.WordAssociation(
+                        entry_match.group("word_1"),
+                        entry_match.group("word_2"),
+                        float(entry_match.group("relatedness"))))
+        return judgements
 
 
 class ColourEmotionAssociation(WordAssociationTest):
