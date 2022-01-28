@@ -136,6 +136,7 @@ class Preferences:
     wordsim_relatedness_path  = path.join(test_dir, "WordSim353", "wordsim_relatedness_goldstandard.txt")
     wordsim_all_path          = path.join(test_dir, "WordSim353", "combined.csv")
     men_path                  = path.join(test_dir, "MEN BrEng", "MEN_dataset_natural_form_full")
+    rw_path                   = path.join(test_dir, "Rare Words", "rw.txt")
     rel_path                  = path.join(test_dir, "Rel-122", "rel122-norms.txt")
     swow_r1_path              = path.join(test_dir, "SmallWorld", "strength.SWOW-EN.R1.csv")
     swow_r123_path            = path.join(test_dir, "SmallWorld", "strength.SWOW-EN.R123.csv")

@@ -490,6 +490,26 @@ class WordsimAll(WordAssociationTest):
         return judgements
 
 
+class RareWordSimilarity(WordAssociationTest):
+    """Rare Words similarity judgements."""
+
+    def __init__(self):
+        super().__init__("RareWords")
+
+    def _load(self) -> List[WordAssociationTest.WordAssociation]:
+
+        associations = []
+        with open(Preferences.rw_path, mode="r", encoding="utf-8") as rw_file:
+            for line in rw_file:
+                parts = line.split("\t")
+                associations.append(WordAssociationTest.WordAssociation(
+                    parts[0],
+                    parts[1],
+                    float(parts[2])))
+
+        return associations
+
+
 class ColourEmotionAssociation(WordAssociationTest):
     """
     Sutton & Altarriba (2016) colour–emotion association norms.
