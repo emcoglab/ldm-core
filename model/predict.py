@@ -54,7 +54,7 @@ class PredictVectorModel(VectorSemanticModel):
             # Default to 8
             self._workers = 8
 
-        self._corpus = BatchedCorpus(corpus_meta, batch_size=1_000)
+        self._corpus = BatchedCorpus(corpus_meta.path, batch_size=1_000)
         self._model: gensim.models.Word2Vec = None
 
     @property

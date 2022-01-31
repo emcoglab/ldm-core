@@ -297,7 +297,7 @@ class UnsummedCoOccurrenceCountModel(CountVectorModel):
 
         # Start scanning the corpus
         window_count = 0
-        for window in WindowedCorpus(self.corpus_meta, window_size):
+        for window in WindowedCorpus(self.corpus_meta.path, window_size):
 
             if self._chirality is Chirality.left:
                 # For a left-hand context, the target token is on the far right
