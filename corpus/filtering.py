@@ -49,7 +49,7 @@ def filter_frequency(unfiltered_corpus: List[str], ignore_tokens_with_freqs_at_m
         Optionally supply an existing frequency distribution to avoid re-computing it
     :return:
     """
-    if ignore_tokens_with_freqs_at_most is 0:
+    if ignore_tokens_with_freqs_at_most == 0:
         return unfiltered_corpus
     else:
         if freq_dist is None:
