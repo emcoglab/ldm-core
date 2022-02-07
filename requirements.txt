@@ -1,8 +1,8 @@
-gensim==2.2.0
+gensim==4.1.2
 nltk==3.2.5
 numpy==1.16.4
 pandas==0.24.2
 pyyaml==5.4
 scipy==1.2.0 # previously >=0.19.0,<=1.2.0 # 0.19.0 minimum requirement for v2.2.0 of gensim; 1.2.0 is max requirement
 sklearn # ==0.21.3  This should be the version but pip doesn't see it for some reason (pip freeze gives 0.0)
-statsmodels==0.10.0
+statsmodels==0.13.1
