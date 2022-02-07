@@ -490,7 +490,7 @@ class WordsimAll(WordAssociationTest):
         return judgements
 
 
-class RareWordSimilarity(WordAssociationTest):
+class RareWordsSimilarity(WordAssociationTest):
     """Rare Words similarity judgements."""
 
     def __init__(self):
