@@ -18,7 +18,7 @@ caiwingfield.net
 import logging
 from abc import ABCMeta
 
-from .base import VectorSemanticModel, DistributionalSemanticModel
+from .base import VectorSemanticModel, LinguisticDistributionalModel
 from .count import CountVectorModel, LogCoOccurrenceCountModel, PPMIModel, ProbabilityRatioModel, PMIModel
 from ..corpus.corpus import CorpusMetadata
 from ..corpus.indexing import FreqDist
@@ -27,13 +27,13 @@ from ..utils.exceptions import WordNotFoundError
 logger = logging.getLogger(__name__)
 
 
-class NgramModel(DistributionalSemanticModel, metaclass=ABCMeta):
+class NgramModel(LinguisticDistributionalModel, metaclass=ABCMeta):
     """
     A model where vectors are computed by counting contexts.
     Essentially a wrapper for an underlying count model.
     """
     def __init__(self,
-                 model_type: DistributionalSemanticModel.ModelType,
+                 model_type: LinguisticDistributionalModel.ModelType,
                  underlying_count_model: CountVectorModel):
         super().__init__(model_type=model_type, corpus_meta=underlying_count_model.corpus_meta)
         self.underlying_count_model: CountVectorModel = underlying_count_model

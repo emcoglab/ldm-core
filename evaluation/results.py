@@ -25,7 +25,7 @@ from typing import List, Optional
 from numpy import nan
 from pandas import DataFrame, read_csv
 
-from ..model.base import DistributionalSemanticModel
+from ..model.base import LinguisticDistributionalModel
 from ..model.predict import PredictVectorModel
 from ..utils.maths import DistanceType
 
@@ -64,7 +64,7 @@ class EvaluationResults(metaclass=ABCMeta):
 
     def add_result(self,
                    test_name: str,
-                   model: DistributionalSemanticModel,
+                   model: LinguisticDistributionalModel,
                    distance_type: Optional[DistanceType],
                    # a dictionary whose keys are the same as the results_column_names
                    result: dict,

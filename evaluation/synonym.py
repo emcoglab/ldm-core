@@ -30,7 +30,7 @@ from pandas import DataFrame
 from .test import Test, Tester
 from .results import EvaluationResults
 from ..corpus.indexing import LetterIndexing
-from ..model.base import VectorSemanticModel, DistributionalSemanticModel
+from ..model.base import VectorSemanticModel, LinguisticDistributionalModel
 from ..model.ngram import NgramModel
 from ..preferences.preferences import Preferences
 from ..utils.exceptions import WordNotFoundError
@@ -278,13 +278,13 @@ class SynonymTester(Tester):
         return self.test.questions_to_dataframe()
 
     def has_tested_model(self,
-                         model: DistributionalSemanticModel,
+                         model: LinguisticDistributionalModel,
                          distance_type: Optional[DistanceType] = None,
                          truncate_length: int = None) -> bool:
         return self.column_name_for_model(model, distance_type, truncate_length) in self._data.columns.values
 
     def column_name_for_model(self,
-                              model: DistributionalSemanticModel,
+                              model: LinguisticDistributionalModel,
                               distance_type: Optional[DistanceType],
                               truncate_vectors_at_length: int) -> str:
         self._validate_model_params(model, distance_type, truncate_vectors_at_length)
@@ -296,19 +296,19 @@ class SynonymTester(Tester):
             return f"{model.name}: {distance_type.name} ({truncate_vectors_at_length})"
 
     def column_name_for_model_guess(self,
-                                    model: DistributionalSemanticModel,
+                                    model: LinguisticDistributionalModel,
                                     distance_type: Optional[DistanceType],
                                     truncate_vectors_at_length: int) -> str:
         return self.column_name_for_model(model, distance_type, truncate_vectors_at_length) + " guess"
 
     def column_name_for_model_correct(self,
-                                      model: DistributionalSemanticModel,
+                                      model: LinguisticDistributionalModel,
                                       distance_type: Optional[DistanceType],
                                       truncate_vectors_at_length: int) -> str:
         return self.column_name_for_model(model, distance_type, truncate_vectors_at_length) + " correct"
 
     def administer_test(self,
-                        model: DistributionalSemanticModel,
+                        model: LinguisticDistributionalModel,
                         distance_type: Optional[DistanceType] = None,
                         truncate_vectors_at_length: int = None):
         """
@@ -391,7 +391,7 @@ class SynonymTester(Tester):
             self._save_data()
 
     def results_for_model(self,
-                          model: DistributionalSemanticModel,
+                          model: LinguisticDistributionalModel,
                           distance_type: Optional[DistanceType] = None,
                           truncate_vectors_at_length: int = None) -> dict:
         """
@@ -417,7 +417,7 @@ class SynonymTester(Tester):
         }
 
     @staticmethod
-    def _validate_model_params(model: DistributionalSemanticModel, distance_type: Optional[DistanceType],
+    def _validate_model_params(model: LinguisticDistributionalModel, distance_type: Optional[DistanceType],
                                truncate_vectors_at_length: Optional[int]):
         if isinstance(model, NgramModel):
             assert distance_type is None

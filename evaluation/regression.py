@@ -27,7 +27,7 @@ from pandas import DataFrame, read_csv, merge, ExcelFile, Series
 from statsmodels.regression.linear_model import OLS
 from statsmodels.tools import add_constant
 
-from ..model.base import VectorSemanticModel, DistributionalSemanticModel
+from ..model.base import VectorSemanticModel, LinguisticDistributionalModel
 from ..model.ngram import NgramModel
 from ..model.predict import PredictVectorModel
 from ..utils.exceptions import WordNotFoundError
@@ -316,7 +316,7 @@ class SppData(RegressionData):
 
     @classmethod
     def predictor_name_for_model(cls,
-                                 model: DistributionalSemanticModel,
+                                 model: LinguisticDistributionalModel,
                                  distance_type: Optional[DistanceType],
                                  for_priming_effect: bool) -> str:
 
@@ -337,7 +337,7 @@ class SppData(RegressionData):
         return safe_name
 
     def add_model_predictor(self,
-                            model: DistributionalSemanticModel,
+                            model: LinguisticDistributionalModel,
                             distance_type: Optional[DistanceType],
                             for_priming_effect: bool,
                             memory_map: bool = False):
@@ -497,7 +497,7 @@ class CalgaryData(RegressionData):
 
     @classmethod
     def predictor_name_for_model_fixed_reference(cls,
-                                                 model: DistributionalSemanticModel,
+                                                 model: LinguisticDistributionalModel,
                                                  distance_type: Optional[DistanceType],
                                                  reference_word: str) -> str:
         if distance_type is None:
@@ -518,7 +518,7 @@ class CalgaryData(RegressionData):
         return ["concrete", "abstract"]
 
     def add_model_predictor_fixed_reference(self,
-                                            model: DistributionalSemanticModel,
+                                            model: LinguisticDistributionalModel,
                                             distance_type: Optional[DistanceType],
                                             reference_word: str,
                                             memory_map: bool = False):
@@ -574,7 +574,7 @@ class RegressionResult(object):
     """
     def __init__(self,
                  dv_name: str,
-                 model: DistributionalSemanticModel,
+                 model: LinguisticDistributionalModel,
                  distance_type: Optional[DistanceType],
                  baseline_r2: float,
                  baseline_bic: float,

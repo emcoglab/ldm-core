@@ -33,7 +33,7 @@ from ..utils.maths import DistanceType, distance
 logger = logging.getLogger(__name__)
 
 
-class DistributionalSemanticModel(metaclass=ABCMeta):
+class LinguisticDistributionalModel(metaclass=ABCMeta):
     """A distributional model of the language."""
 
     class MetaType(Enum):
@@ -46,11 +46,11 @@ class DistributionalSemanticModel(metaclass=ABCMeta):
 
         @property
         def name(self) -> str:
-            if self is DistributionalSemanticModel.MetaType.count:
+            if self is LinguisticDistributionalModel.MetaType.count:
                 return "Count"
-            elif self is DistributionalSemanticModel.MetaType.predict:
+            elif self is LinguisticDistributionalModel.MetaType.predict:
                 return "Predict"
-            elif self is DistributionalSemanticModel.MetaType.ngram:
+            elif self is LinguisticDistributionalModel.MetaType.ngram:
                 return "N-gram"
             else:
                 raise ValueError()
@@ -88,53 +88,53 @@ class DistributionalSemanticModel(metaclass=ABCMeta):
             :return:
             """
 
-            if self is DistributionalSemanticModel.ModelType.cbow:
-                return DistributionalSemanticModel.MetaType.predict
+            if self is LinguisticDistributionalModel.ModelType.cbow:
+                return LinguisticDistributionalModel.MetaType.predict
 
-            elif self is DistributionalSemanticModel.ModelType.skip_gram:
-                return DistributionalSemanticModel.MetaType.predict
+            elif self is LinguisticDistributionalModel.ModelType.skip_gram:
+                return LinguisticDistributionalModel.MetaType.predict
 
-            elif self is DistributionalSemanticModel.ModelType.unsummed_cooccurrence:
-                return DistributionalSemanticModel.MetaType.count
+            elif self is LinguisticDistributionalModel.ModelType.unsummed_cooccurrence:
+                return LinguisticDistributionalModel.MetaType.count
 
-            elif self is DistributionalSemanticModel.ModelType.cooccurrence:
-                return DistributionalSemanticModel.MetaType.count
+            elif self is LinguisticDistributionalModel.ModelType.cooccurrence:
+                return LinguisticDistributionalModel.MetaType.count
 
-            elif self is DistributionalSemanticModel.ModelType.log_cooccurrence:
-                return DistributionalSemanticModel.MetaType.count
+            elif self is LinguisticDistributionalModel.ModelType.log_cooccurrence:
+                return LinguisticDistributionalModel.MetaType.count
 
-            elif self is DistributionalSemanticModel.ModelType.cooccurrence_probability:
-                return DistributionalSemanticModel.MetaType.count
+            elif self is LinguisticDistributionalModel.ModelType.cooccurrence_probability:
+                return LinguisticDistributionalModel.MetaType.count
 
-            elif self is DistributionalSemanticModel.ModelType.token_probability:
-                return DistributionalSemanticModel.MetaType.count
+            elif self is LinguisticDistributionalModel.ModelType.token_probability:
+                return LinguisticDistributionalModel.MetaType.count
 
-            elif self is DistributionalSemanticModel.ModelType.context_probability:
-                return DistributionalSemanticModel.MetaType.count
+            elif self is LinguisticDistributionalModel.ModelType.context_probability:
+                return LinguisticDistributionalModel.MetaType.count
 
-            elif self is DistributionalSemanticModel.ModelType.conditional_probability:
-                return DistributionalSemanticModel.MetaType.count
+            elif self is LinguisticDistributionalModel.ModelType.conditional_probability:
+                return LinguisticDistributionalModel.MetaType.count
 
-            elif self is DistributionalSemanticModel.ModelType.probability_ratio:
-                return DistributionalSemanticModel.MetaType.count
+            elif self is LinguisticDistributionalModel.ModelType.probability_ratio:
+                return LinguisticDistributionalModel.MetaType.count
 
-            elif self is DistributionalSemanticModel.ModelType.pmi:
-                return DistributionalSemanticModel.MetaType.count
+            elif self is LinguisticDistributionalModel.ModelType.pmi:
+                return LinguisticDistributionalModel.MetaType.count
 
-            elif self is DistributionalSemanticModel.ModelType.ppmi:
-                return DistributionalSemanticModel.MetaType.count
+            elif self is LinguisticDistributionalModel.ModelType.ppmi:
+                return LinguisticDistributionalModel.MetaType.count
 
-            elif self is DistributionalSemanticModel.ModelType.log_ngram:
-                return DistributionalSemanticModel.MetaType.ngram
+            elif self is LinguisticDistributionalModel.ModelType.log_ngram:
+                return LinguisticDistributionalModel.MetaType.ngram
 
-            elif self is DistributionalSemanticModel.ModelType.probability_ratio_ngram:
-                return DistributionalSemanticModel.MetaType.ngram
+            elif self is LinguisticDistributionalModel.ModelType.probability_ratio_ngram:
+                return LinguisticDistributionalModel.MetaType.ngram
 
-            elif self is DistributionalSemanticModel.ModelType.pmi_ngram:
-                return DistributionalSemanticModel.MetaType.ngram
+            elif self is LinguisticDistributionalModel.ModelType.pmi_ngram:
+                return LinguisticDistributionalModel.MetaType.ngram
 
-            elif self is DistributionalSemanticModel.ModelType.ppmi_ngram:
-                return DistributionalSemanticModel.MetaType.ngram
+            elif self is LinguisticDistributionalModel.ModelType.ppmi_ngram:
+                return LinguisticDistributionalModel.MetaType.ngram
 
             else:
                 raise ValueError()
@@ -146,52 +146,52 @@ class DistributionalSemanticModel(metaclass=ABCMeta):
             :return:
             """
 
-            if self is DistributionalSemanticModel.ModelType.cbow:
+            if self is LinguisticDistributionalModel.ModelType.cbow:
                 return "cbow"
 
-            elif self is DistributionalSemanticModel.ModelType.skip_gram:
+            elif self is LinguisticDistributionalModel.ModelType.skip_gram:
                 return "skipgram"
 
-            elif self is DistributionalSemanticModel.ModelType.unsummed_cooccurrence:
+            elif self is LinguisticDistributionalModel.ModelType.unsummed_cooccurrence:
                 return "unsummed_cooccurrence"
 
-            elif self is DistributionalSemanticModel.ModelType.cooccurrence:
+            elif self is LinguisticDistributionalModel.ModelType.cooccurrence:
                 return "cooccurrence"
 
-            elif self is DistributionalSemanticModel.ModelType.log_cooccurrence:
+            elif self is LinguisticDistributionalModel.ModelType.log_cooccurrence:
                 return "log_cooccurrence"
 
-            elif self is DistributionalSemanticModel.ModelType.cooccurrence_probability:
+            elif self is LinguisticDistributionalModel.ModelType.cooccurrence_probability:
                 return "cooccurrence_probability"
 
-            elif self is DistributionalSemanticModel.ModelType.token_probability:
+            elif self is LinguisticDistributionalModel.ModelType.token_probability:
                 return "token_probability"
 
-            elif self is DistributionalSemanticModel.ModelType.context_probability:
+            elif self is LinguisticDistributionalModel.ModelType.context_probability:
                 return "context_probability"
 
-            elif self is DistributionalSemanticModel.ModelType.conditional_probability:
+            elif self is LinguisticDistributionalModel.ModelType.conditional_probability:
                 return "conditional_probability"
 
-            elif self is DistributionalSemanticModel.ModelType.probability_ratio:
+            elif self is LinguisticDistributionalModel.ModelType.probability_ratio:
                 return "probability_ratios"
 
-            elif self is DistributionalSemanticModel.ModelType.pmi:
+            elif self is LinguisticDistributionalModel.ModelType.pmi:
                 return "pmi"
 
-            elif self is DistributionalSemanticModel.ModelType.ppmi:
+            elif self is LinguisticDistributionalModel.ModelType.ppmi:
                 return "ppmi"
 
-            elif self is DistributionalSemanticModel.ModelType.log_ngram:
+            elif self is LinguisticDistributionalModel.ModelType.log_ngram:
                 return "log_ngram"
 
-            elif self is DistributionalSemanticModel.ModelType.probability_ratio_ngram:
+            elif self is LinguisticDistributionalModel.ModelType.probability_ratio_ngram:
                 return "probability_ratios_ngram"
 
-            elif self is DistributionalSemanticModel.ModelType.pmi_ngram:
+            elif self is LinguisticDistributionalModel.ModelType.pmi_ngram:
                 return "pmi_ngram"
 
-            elif self is DistributionalSemanticModel.ModelType.ppmi_ngram:
+            elif self is LinguisticDistributionalModel.ModelType.ppmi_ngram:
                 return "ppmi_ngram"
 
             else:
@@ -203,60 +203,60 @@ class DistributionalSemanticModel(metaclass=ABCMeta):
             The name of the model type
             :return:
             """
-            if self is DistributionalSemanticModel.ModelType.cbow:
+            if self is LinguisticDistributionalModel.ModelType.cbow:
                 return "CBOW"
 
-            elif self is DistributionalSemanticModel.ModelType.skip_gram:
+            elif self is LinguisticDistributionalModel.ModelType.skip_gram:
                 return "Skip-gram"
 
-            elif self is DistributionalSemanticModel.ModelType.unsummed_cooccurrence:
+            elif self is LinguisticDistributionalModel.ModelType.unsummed_cooccurrence:
                 # TODO: these should be capitalised for consistency, but this will require editing and renaming results files
                 return "co-occurrence (unsummed)"
 
-            elif self is DistributionalSemanticModel.ModelType.cooccurrence:
+            elif self is LinguisticDistributionalModel.ModelType.cooccurrence:
                 return "co-occurrence"
 
-            elif self is DistributionalSemanticModel.ModelType.log_cooccurrence:
+            elif self is LinguisticDistributionalModel.ModelType.log_cooccurrence:
                 return "log co-occurrence"
 
-            elif self is DistributionalSemanticModel.ModelType.cooccurrence_probability:
+            elif self is LinguisticDistributionalModel.ModelType.cooccurrence_probability:
                 return "co-occurrence probability"
 
-            elif self is DistributionalSemanticModel.ModelType.token_probability:
+            elif self is LinguisticDistributionalModel.ModelType.token_probability:
                 return "Token probability"
 
-            elif self is DistributionalSemanticModel.ModelType.context_probability:
+            elif self is LinguisticDistributionalModel.ModelType.context_probability:
                 return "Context probability"
 
-            elif self is DistributionalSemanticModel.ModelType.conditional_probability:
+            elif self is LinguisticDistributionalModel.ModelType.conditional_probability:
                 return "Conditional probability"
 
-            elif self is DistributionalSemanticModel.ModelType.probability_ratio:
+            elif self is LinguisticDistributionalModel.ModelType.probability_ratio:
                 return "Probability ratio"
 
-            elif self is DistributionalSemanticModel.ModelType.pmi:
+            elif self is LinguisticDistributionalModel.ModelType.pmi:
                 return "PMI"
 
-            elif self is DistributionalSemanticModel.ModelType.ppmi:
+            elif self is LinguisticDistributionalModel.ModelType.ppmi:
                 return "PPMI"
 
-            elif self is DistributionalSemanticModel.ModelType.log_ngram:
+            elif self is LinguisticDistributionalModel.ModelType.log_ngram:
                 return "log n-gram"
 
-            elif self is DistributionalSemanticModel.ModelType.probability_ratio_ngram:
+            elif self is LinguisticDistributionalModel.ModelType.probability_ratio_ngram:
                 return "Probability ratio n-gram"
 
-            elif self is DistributionalSemanticModel.ModelType.pmi_ngram:
+            elif self is LinguisticDistributionalModel.ModelType.pmi_ngram:
                 return "PMI n-gram"
 
-            elif self is DistributionalSemanticModel.ModelType.ppmi_ngram:
+            elif self is LinguisticDistributionalModel.ModelType.ppmi_ngram:
                 return "PPMI n-gram"
 
             else:
                 raise ValueError()
 
         @classmethod
-        def from_slug(cls, slug: str) -> DistributionalSemanticModel.ModelType:
+        def from_slug(cls, slug: str) -> LinguisticDistributionalModel.ModelType:
             """
             Get the model type from the slug.
             """
@@ -314,40 +314,40 @@ class DistributionalSemanticModel(metaclass=ABCMeta):
                 raise ValueError()
 
         @classmethod
-        def from_name(cls, name: str) -> DistributionalSemanticModel.ModelType:
+        def from_name(cls, name: str) -> LinguisticDistributionalModel.ModelType:
             if name == "CBOW":
-                return DistributionalSemanticModel.ModelType.cbow
+                return LinguisticDistributionalModel.ModelType.cbow
             elif name == "Skip-gram":
-                return DistributionalSemanticModel.ModelType.skip_gram
+                return LinguisticDistributionalModel.ModelType.skip_gram
             elif name == "co-occurrence (unsummed)":
                 # TODO: these should be capitalised for consistency, but this will require editing and renaming results file
-                return DistributionalSemanticModel.ModelType.unsummed_cooccurrence
+                return LinguisticDistributionalModel.ModelType.unsummed_cooccurrence
             elif name == "co-occurrence":
-                return DistributionalSemanticModel.ModelType.cooccurrence
+                return LinguisticDistributionalModel.ModelType.cooccurrence
             elif name == "log co-occurrence":
-                return DistributionalSemanticModel.ModelType.log_cooccurrence
+                return LinguisticDistributionalModel.ModelType.log_cooccurrence
             elif name == "co-occurrence probability":
-                return DistributionalSemanticModel.ModelType.cooccurrence_probability
+                return LinguisticDistributionalModel.ModelType.cooccurrence_probability
             elif name == "Token probability":
-                return DistributionalSemanticModel.ModelType.token_probability
+                return LinguisticDistributionalModel.ModelType.token_probability
             elif name == "Context probability":
-                return DistributionalSemanticModel.ModelType.context_probability
+                return LinguisticDistributionalModel.ModelType.context_probability
             elif name == "Conditional probability":
-                return DistributionalSemanticModel.ModelType.conditional_probability
+                return LinguisticDistributionalModel.ModelType.conditional_probability
             elif name == "Probability ratio":
-                return DistributionalSemanticModel.ModelType.probability_ratio
+                return LinguisticDistributionalModel.ModelType.probability_ratio
             elif name == "PMI":
-                return DistributionalSemanticModel.ModelType.pmi
+                return LinguisticDistributionalModel.ModelType.pmi
             elif name == "PPMI":
-                return DistributionalSemanticModel.ModelType.ppmi
+                return LinguisticDistributionalModel.ModelType.ppmi
             elif name == "log n-gram":
-                return DistributionalSemanticModel.ModelType.log_ngram
+                return LinguisticDistributionalModel.ModelType.log_ngram
             elif name == "Probability ratio n-gram":
-                return DistributionalSemanticModel.ModelType.probability_ratio_ngram
+                return LinguisticDistributionalModel.ModelType.probability_ratio_ngram
             elif name == "PMI n-gram":
-                return DistributionalSemanticModel.ModelType.pmi_ngram
+                return LinguisticDistributionalModel.ModelType.pmi_ngram
             elif name == "PPMI n-gram":
-                return DistributionalSemanticModel.ModelType.ppmi_ngram
+                return LinguisticDistributionalModel.ModelType.ppmi_ngram
             else:
                 raise ValueError()
 
@@ -356,21 +356,21 @@ class DistributionalSemanticModel(metaclass=ABCMeta):
             """
             Lists the predict types.
             """
-            return [t for t in DistributionalSemanticModel.ModelType if t.metatype is DistributionalSemanticModel.MetaType.predict]
+            return [t for t in LinguisticDistributionalModel.ModelType if t.metatype is LinguisticDistributionalModel.MetaType.predict]
 
         @classmethod
         def count_types(cls):
             """
             Lists the count types.
             """
-            return [t for t in DistributionalSemanticModel.ModelType if t.metatype is DistributionalSemanticModel.MetaType.count]
+            return [t for t in LinguisticDistributionalModel.ModelType if t.metatype is LinguisticDistributionalModel.MetaType.count]
 
         @classmethod
         def ngram_types(cls):
             """
             Lists the ngram types.
             """
-            return [t for t in DistributionalSemanticModel.ModelType if t.metatype is DistributionalSemanticModel.MetaType.ngram]
+            return [t for t in LinguisticDistributionalModel.ModelType if t.metatype is LinguisticDistributionalModel.MetaType.ngram]
 
     def __init__(self, model_type: ModelType, corpus_meta: CorpusMetadata):
 
@@ -467,11 +467,11 @@ class DistributionalSemanticModel(metaclass=ABCMeta):
         raise NotImplementedError()
 
 
-class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
+class VectorSemanticModel(LinguisticDistributionalModel, metaclass=ABCMeta):
     """A language model where each word is associated with a point in a vector space."""
 
     def __init__(self,
-                 model_type: DistributionalSemanticModel.ModelType,
+                 model_type: LinguisticDistributionalModel.ModelType,
                  corpus_meta: CorpusMetadata,
                  window_radius: int):
         super().__init__(model_type, corpus_meta)
@@ -589,11 +589,11 @@ class VectorSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
         return distance(v_1, v_2, distance_type)
 
 
-class ScalarSemanticModel(DistributionalSemanticModel, metaclass=ABCMeta):
+class ScalarSemanticModel(LinguisticDistributionalModel, metaclass=ABCMeta):
     """A language model where each word is associated with a scalar value."""
 
     def __init__(self,
-                 model_type: DistributionalSemanticModel.ModelType,
+                 model_type: LinguisticDistributionalModel.ModelType,
                  corpus_meta: CorpusMetadata,
                  window_radius: int):
         super().__init__(model_type, corpus_meta)

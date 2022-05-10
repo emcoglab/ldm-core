@@ -22,7 +22,7 @@ from os import path, makedirs
 
 import gensim
 
-from .base import VectorSemanticModel, DistributionalSemanticModel
+from .base import VectorSemanticModel, LinguisticDistributionalModel
 from ..utils.exceptions import WordNotFoundError
 from ..utils.maths import distance, DistanceType
 from ..corpus.corpus import CorpusMetadata, BatchedCorpus
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 class PredictVectorModel(VectorSemanticModel):
     """A vector space model where words are predicted rather than counted."""
     def __init__(self,
-                 model_type: DistributionalSemanticModel.ModelType,
+                 model_type: LinguisticDistributionalModel.ModelType,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  embedding_size: int,

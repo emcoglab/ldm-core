@@ -32,7 +32,7 @@ from pandas import DataFrame
 
 from .test import Test, Tester
 from .results import EvaluationResults
-from ..model.base import DistributionalSemanticModel, VectorSemanticModel
+from ..model.base import LinguisticDistributionalModel, VectorSemanticModel
 from ..model.ngram import NgramModel
 from ..utils.exceptions import WordNotFoundError
 from ..utils.maths import DistanceType, CorrelationType
@@ -109,12 +109,12 @@ class AssociationTester(Tester):
         return path.join(Preferences.association_results_dir, f"{self.test.name} data.csv")
 
     def has_tested_model(self,
-                         model: DistributionalSemanticModel,
+                         model: LinguisticDistributionalModel,
                          distance_type: Optional[DistanceType] = None) -> bool:
         return self.column_name_for_model(model, distance_type) in self._data.columns.values
 
     def column_name_for_model(self,
-                              model: DistributionalSemanticModel,
+                              model: LinguisticDistributionalModel,
                               distance_type: Optional[DistanceType]) -> str:
         self._validate_model_params(model, distance_type)
         if distance_type is None:
@@ -124,7 +124,7 @@ class AssociationTester(Tester):
 
     def administer_test(
             self,
-            model: DistributionalSemanticModel,
+            model: LinguisticDistributionalModel,
             distance_type: Optional[DistanceType] = None):
         """
         Administers a battery of tests against a model
@@ -166,7 +166,7 @@ class AssociationTester(Tester):
 
     def results_for_model(self,
                           correlation_type: CorrelationType,
-                          model: DistributionalSemanticModel,
+                          model: LinguisticDistributionalModel,
                           distance_type: Optional[DistanceType] = None) -> dict:
         """
         Save results based on the current self._data.
@@ -219,7 +219,7 @@ class AssociationTester(Tester):
         }
 
     @staticmethod
-    def _validate_model_params(model: DistributionalSemanticModel, distance_type: Optional[DistanceType]):
+    def _validate_model_params(model: LinguisticDistributionalModel, distance_type: Optional[DistanceType]):
         if isinstance(model, NgramModel):
             assert distance_type is None
         if isinstance(model, VectorSemanticModel):

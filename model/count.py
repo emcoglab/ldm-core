@@ -28,7 +28,7 @@ from scipy.spatial.distance import cdist as distance_matrix
 from sklearn.metrics import pairwise_distances as sparse_pairwise_distances
 
 from ..utils.lists import chunks
-from .base import VectorSemanticModel, DistributionalSemanticModel, ScalarSemanticModel
+from .base import VectorSemanticModel, LinguisticDistributionalModel, ScalarSemanticModel
 from ..corpus.corpus import CorpusMetadata, WindowedCorpus
 from ..corpus.indexing import FreqDist, TokenIndex
 from ..utils.constants import Chirality
@@ -47,7 +47,7 @@ class CountVectorModel(VectorSemanticModel):
     """
 
     def __init__(self,
-                 model_type: DistributionalSemanticModel.ModelType,
+                 model_type: LinguisticDistributionalModel.ModelType,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
@@ -205,7 +205,7 @@ class CountScalarModel(ScalarSemanticModel, metaclass=ABCMeta):
     """A context-counting language model where each word is associated with a scalar value."""
 
     def __init__(self,
-                 model_type: DistributionalSemanticModel.ModelType,
+                 model_type: LinguisticDistributionalModel.ModelType,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist):
@@ -261,7 +261,7 @@ class UnsummedCoOccurrenceCountModel(CountVectorModel):
                  window_radius: int,
                  chirality: Chirality,
                  freq_dist: FreqDist = None):
-        super().__init__(DistributionalSemanticModel.ModelType.unsummed_cooccurrence,
+        super().__init__(LinguisticDistributionalModel.ModelType.unsummed_cooccurrence,
                          corpus_meta, window_radius, freq_dist)
         self._chirality = chirality
 
@@ -560,7 +560,7 @@ class ProbabilityRatioModel(CountVectorModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(DistributionalSemanticModel.ModelType.probability_ratio, corpus_meta, window_radius, freq_dist)
+        super().__init__(LinguisticDistributionalModel.ModelType.probability_ratio, corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):
         cond_prob_model = ConditionalProbabilityModel(self.corpus_meta, self.window_radius, self.freq_dist)
@@ -615,7 +615,7 @@ class PMIModel(CountVectorModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(DistributionalSemanticModel.ModelType.pmi, corpus_meta, window_radius, freq_dist)
+        super().__init__(LinguisticDistributionalModel.ModelType.pmi, corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):
 
@@ -648,7 +648,7 @@ class PPMIModel(CountVectorModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(DistributionalSemanticModel.ModelType.ppmi, corpus_meta, window_radius, freq_dist)
+        super().__init__(LinguisticDistributionalModel.ModelType.ppmi, corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):
 
