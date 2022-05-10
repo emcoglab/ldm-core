@@ -74,6 +74,7 @@ class NgramModel(LinguisticDistributionalModel, metaclass=ABCMeta):
     def _load(self, memory_map: bool = False):
         self.underlying_count_model._load(memory_map)
 
+    @property
     def could_load(self) -> bool:
         return self.underlying_count_model.could_load
 
