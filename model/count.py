@@ -198,7 +198,7 @@ class CountVectorModel(VectorSemanticModel):
 
     def contains_word(self, word: str) -> bool:
         """Is the word in the corpus used to train the model?"""
-        return word.lower() in [token.lower() for token in self.token_index.token2id]
+        return word.lower() in self.token_index.token2id
 
 
 class CountScalarModel(ScalarSemanticModel, metaclass=ABCMeta):
