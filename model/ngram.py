@@ -18,7 +18,7 @@ caiwingfield.net
 import logging
 from abc import ABCMeta
 
-from .base import VectorSemanticModel, LinguisticDistributionalModel
+from .base import VectorModel, LinguisticDistributionalModel
 from .count import CountVectorModel, LogCoOccurrenceCountModel, PPMIModel, ProbabilityRatioModel, PMIModel, \
     ConditionalProbabilityModel
 from ..corpus.corpus import CorpusMetadata
@@ -119,7 +119,7 @@ class LogNgramModel(NgramModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.log_ngram,
+        super().__init__(VectorModel.ModelType.log_ngram,
                          LogCoOccurrenceCountModel(corpus_meta, window_radius, freq_dist))
 
 
@@ -137,7 +137,7 @@ class ConditionalProbabilityNgramModel(NgramModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.conditional_probability_ngram,
+        super().__init__(VectorModel.ModelType.conditional_probability_ngram,
                          ConditionalProbabilityModel(corpus_meta, window_radius, freq_dist))
 
 
@@ -154,7 +154,7 @@ class ProbabilityRatioNgramModel(NgramModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.probability_ratio_ngram,
+        super().__init__(VectorModel.ModelType.probability_ratio_ngram,
                          ProbabilityRatioModel(corpus_meta, window_radius, freq_dist))
 
 
@@ -168,7 +168,7 @@ class PMINgramModel(NgramModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.pmi_ngram,
+        super().__init__(VectorModel.ModelType.pmi_ngram,
                          PMIModel(corpus_meta, window_radius, freq_dist))
 
 
@@ -182,5 +182,5 @@ class PPMINgramModel(NgramModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.ppmi_ngram,
+        super().__init__(VectorModel.ModelType.ppmi_ngram,
                          PPMIModel(corpus_meta, window_radius, freq_dist))

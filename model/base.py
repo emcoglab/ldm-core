@@ -462,7 +462,7 @@ class LinguisticDistributionalModel(metaclass=ABCMeta):
         raise NotImplementedError()
 
 
-class VectorSemanticModel(LinguisticDistributionalModel, metaclass=ABCMeta):
+class VectorModel(LinguisticDistributionalModel, metaclass=ABCMeta):
     """A language model where each word is associated with a point in a vector space."""
 
     def __init__(self,
@@ -584,7 +584,7 @@ class VectorSemanticModel(LinguisticDistributionalModel, metaclass=ABCMeta):
         return distance(v_1, v_2, distance_type)
 
 
-class ScalarSemanticModel(LinguisticDistributionalModel, metaclass=ABCMeta):
+class ScalarModel(LinguisticDistributionalModel, metaclass=ABCMeta):
     """A language model where each word is associated with a scalar value."""
 
     def __init__(self,

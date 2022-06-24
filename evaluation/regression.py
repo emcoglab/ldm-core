@@ -27,7 +27,7 @@ from pandas import DataFrame, read_csv, merge, ExcelFile, Series
 from statsmodels.regression.linear_model import OLS
 from statsmodels.tools import add_constant
 
-from ..model.base import VectorSemanticModel, LinguisticDistributionalModel
+from ..model.base import VectorModel, LinguisticDistributionalModel
 from ..model.ngram import NgramModel
 from ..model.predict import PredictVectorModel
 from ..utils.exceptions import WordNotFoundError
@@ -154,10 +154,10 @@ class RegressionData(metaclass=ABCMeta):
         """
         raise NotImplementedError()
 
-    def missing_words(self, model: VectorSemanticModel) -> List[str]:
+    def missing_words(self, model: VectorModel) -> List[str]:
         """
         The list of SPP words which aren't present in a model.
-        :type model: VectorSemanticModel
+        :type model: VectorModel
         :param model: Must be trained.
         :return: List of missing words.
         """
@@ -369,7 +369,7 @@ class SppData(RegressionData):
                 word_1, word_2 = word_pair
                 try:
                     # Vector models compare words using distances
-                    if isinstance(model, VectorSemanticModel):
+                    if isinstance(model, VectorModel):
                         # The above type check should ensure that the model has this method.
                         # I think this warning and the following one are due to model being captured.
                         return model.distance_between(word_1, word_2, distance_type)
@@ -545,7 +545,7 @@ class CalgaryData(RegressionData):
                 """
                 try:
                     # Vector models compare words using distances
-                    if isinstance(model, VectorSemanticModel):
+                    if isinstance(model, VectorModel):
                         # The above type check should ensure that the model has this method.
                         # I think this warning and the following one are due to model being captured.
                         return model.distance_between(word, reference_word, distance_type)

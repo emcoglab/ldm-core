@@ -30,7 +30,7 @@ from pandas import DataFrame
 from .test import Test, Tester
 from .results import EvaluationResults
 from ..corpus.indexing import LetterIndexing
-from ..model.base import VectorSemanticModel, LinguisticDistributionalModel
+from ..model.base import VectorModel, LinguisticDistributionalModel
 from ..model.ngram import NgramModel
 from ..preferences.preferences import Preferences
 from ..utils.exceptions import WordNotFoundError
@@ -338,7 +338,7 @@ class SynonymTester(Tester):
             try:
                 if isinstance(model, NgramModel):
                     return model.association_between(w1, w2)
-                elif isinstance(model, VectorSemanticModel):
+                elif isinstance(model, VectorModel):
                     return model.distance_between(w1, w2, distance_type, truncate_vectors_at_length)
                 else:
                     raise NotImplementedError()
@@ -363,7 +363,7 @@ class SynonymTester(Tester):
                        # idxmax to select the choice with the largest association value
                        .idxmax()
                        [model_distance_col_name])
-        elif isinstance(model, VectorSemanticModel):
+        elif isinstance(model, VectorModel):
             guesses = (self._data
                        # Reverse. Then idxmin returns the LAST row within a group which attains the minimum value.
                        # Then, in case of ties, we select the last option.
@@ -422,5 +422,5 @@ class SynonymTester(Tester):
         if isinstance(model, NgramModel):
             assert distance_type is None
             assert truncate_vectors_at_length is None
-        if isinstance(model, VectorSemanticModel):
+        if isinstance(model, VectorModel):
             assert distance_type is not None

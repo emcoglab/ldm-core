@@ -28,7 +28,7 @@ from scipy.spatial.distance import cdist as distance_matrix
 from sklearn.metrics import pairwise_distances as sparse_pairwise_distances
 
 from ..utils.lists import chunks
-from .base import VectorSemanticModel, LinguisticDistributionalModel, ScalarSemanticModel
+from .base import VectorModel, LinguisticDistributionalModel, ScalarModel
 from ..corpus.corpus import CorpusMetadata, WindowedCorpus
 from ..corpus.indexing import FreqDist, TokenIndex
 from ..utils.constants import Chirality
@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 SPARSE_BATCH_SIZE = 100
 
 
-class CountVectorModel(VectorSemanticModel):
+class CountVectorModel(VectorModel):
     """
     A model where vectors are computed by counting contexts.
     """
@@ -201,7 +201,7 @@ class CountVectorModel(VectorSemanticModel):
         return word.lower() in self.token_index.token2id
 
 
-class CountScalarModel(ScalarSemanticModel, metaclass=ABCMeta):
+class CountScalarModel(ScalarModel, metaclass=ABCMeta):
     """A context-counting language model where each word is associated with a scalar value."""
 
     def __init__(self,
@@ -347,7 +347,7 @@ class CoOccurrenceCountModel(CountVectorModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.cooccurrence, corpus_meta, window_radius, freq_dist)
+        super().__init__(VectorModel.ModelType.cooccurrence, corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):
 
@@ -386,7 +386,7 @@ class LogCoOccurrenceCountModel(CountVectorModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.log_cooccurrence, corpus_meta, window_radius, freq_dist)
+        super().__init__(VectorModel.ModelType.log_cooccurrence, corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):
         # Get the cooccurrence model
@@ -416,7 +416,7 @@ class CoOccurrenceProbabilityModel(CountVectorModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.cooccurrence_probability,
+        super().__init__(VectorModel.ModelType.cooccurrence_probability,
                          corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):
@@ -449,7 +449,7 @@ class TokenProbabilityModel(CountScalarModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.token_probability,
+        super().__init__(VectorModel.ModelType.token_probability,
                          corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):
@@ -483,7 +483,7 @@ class ConditionalProbabilityModel(CountVectorModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.conditional_probability, corpus_meta, window_radius, freq_dist)
+        super().__init__(VectorModel.ModelType.conditional_probability, corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):
         ngram_probability_model = CoOccurrenceProbabilityModel(self.corpus_meta, self.window_radius, self.freq_dist)
@@ -531,7 +531,7 @@ class ContextProbabilityModel(CountScalarModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.context_probability,
+        super().__init__(VectorModel.ModelType.context_probability,
                          corpus_meta, window_radius, freq_dist)
 
     def _retrain(self):
