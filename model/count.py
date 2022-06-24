@@ -475,6 +475,8 @@ class ConditionalProbabilityModel(CountVectorModel):
 
     c: context token
     t: target token
+
+    The underlying matrix will be vectors for each target word, with vector entries indexed by context words.
     """
 
     def __init__(self,

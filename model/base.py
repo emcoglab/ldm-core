@@ -76,10 +76,11 @@ class LinguisticDistributionalModel(metaclass=ABCMeta):
         ppmi                     = auto()
 
         # Ngram model
-        log_ngram               = auto()
-        probability_ratio_ngram = auto()
-        pmi_ngram               = auto()
-        ppmi_ngram              = auto()
+        log_ngram                     = auto()
+        conditional_probability_ngram = auto()
+        probability_ratio_ngram       = auto()
+        pmi_ngram                     = auto()
+        ppmi_ngram                    = auto()
 
         @property
         def metatype(self):
@@ -87,55 +88,38 @@ class LinguisticDistributionalModel(metaclass=ABCMeta):
             The metatype of this type.
             :return:
             """
+            predict_types = {
+                LinguisticDistributionalModel.ModelType.cbow,
+                LinguisticDistributionalModel.ModelType.skip_gram
+            }
 
-            if self is LinguisticDistributionalModel.ModelType.cbow:
+            count_types = {
+                LinguisticDistributionalModel.ModelType.unsummed_cooccurrence,
+                LinguisticDistributionalModel.ModelType.cooccurrence,
+                LinguisticDistributionalModel.ModelType.log_cooccurrence,
+                LinguisticDistributionalModel.ModelType.cooccurrence_probability,
+                LinguisticDistributionalModel.ModelType.token_probability,
+                LinguisticDistributionalModel.ModelType.context_probability,
+                LinguisticDistributionalModel.ModelType.conditional_probability,
+                LinguisticDistributionalModel.ModelType.probability_ratio,
+                LinguisticDistributionalModel.ModelType.pmi,
+                LinguisticDistributionalModel.ModelType.ppmi,
+            }
+
+            ngram_types = {
+                LinguisticDistributionalModel.ModelType.log_ngram,
+                LinguisticDistributionalModel.ModelType.conditional_probability_ngram,
+                LinguisticDistributionalModel.ModelType.probability_ratio_ngram,
+                LinguisticDistributionalModel.ModelType.pmi_ngram,
+                LinguisticDistributionalModel.ModelType.ppmi_ngram,
+            }
+
+            if self in predict_types:
                 return LinguisticDistributionalModel.MetaType.predict
-
-            elif self is LinguisticDistributionalModel.ModelType.skip_gram:
-                return LinguisticDistributionalModel.MetaType.predict
-
-            elif self is LinguisticDistributionalModel.ModelType.unsummed_cooccurrence:
+            elif self in count_types:
                 return LinguisticDistributionalModel.MetaType.count
-
-            elif self is LinguisticDistributionalModel.ModelType.cooccurrence:
-                return LinguisticDistributionalModel.MetaType.count
-
-            elif self is LinguisticDistributionalModel.ModelType.log_cooccurrence:
-                return LinguisticDistributionalModel.MetaType.count
-
-            elif self is LinguisticDistributionalModel.ModelType.cooccurrence_probability:
-                return LinguisticDistributionalModel.MetaType.count
-
-            elif self is LinguisticDistributionalModel.ModelType.token_probability:
-                return LinguisticDistributionalModel.MetaType.count
-
-            elif self is LinguisticDistributionalModel.ModelType.context_probability:
-                return LinguisticDistributionalModel.MetaType.count
-
-            elif self is LinguisticDistributionalModel.ModelType.conditional_probability:
-                return LinguisticDistributionalModel.MetaType.count
-
-            elif self is LinguisticDistributionalModel.ModelType.probability_ratio:
-                return LinguisticDistributionalModel.MetaType.count
-
-            elif self is LinguisticDistributionalModel.ModelType.pmi:
-                return LinguisticDistributionalModel.MetaType.count
-
-            elif self is LinguisticDistributionalModel.ModelType.ppmi:
-                return LinguisticDistributionalModel.MetaType.count
-
-            elif self is LinguisticDistributionalModel.ModelType.log_ngram:
+            elif self in ngram_types:
                 return LinguisticDistributionalModel.MetaType.ngram
-
-            elif self is LinguisticDistributionalModel.ModelType.probability_ratio_ngram:
-                return LinguisticDistributionalModel.MetaType.ngram
-
-            elif self is LinguisticDistributionalModel.ModelType.pmi_ngram:
-                return LinguisticDistributionalModel.MetaType.ngram
-
-            elif self is LinguisticDistributionalModel.ModelType.ppmi_ngram:
-                return LinguisticDistributionalModel.MetaType.ngram
-
             else:
                 raise ValueError()
 
@@ -184,6 +168,9 @@ class LinguisticDistributionalModel(metaclass=ABCMeta):
 
             elif self is LinguisticDistributionalModel.ModelType.log_ngram:
                 return "log_ngram"
+
+            elif self is LinguisticDistributionalModel.ModelType.conditional_probability_ngram:
+                return "conditional_probability_ngram"
 
             elif self is LinguisticDistributionalModel.ModelType.probability_ratio_ngram:
                 return "probability_ratios_ngram"
@@ -242,6 +229,9 @@ class LinguisticDistributionalModel(metaclass=ABCMeta):
 
             elif self is LinguisticDistributionalModel.ModelType.log_ngram:
                 return "log n-gram"
+
+            elif self is LinguisticDistributionalModel.ModelType.conditional_probability_ngram:
+                return "Conditional probability n-gram"
 
             elif self is LinguisticDistributionalModel.ModelType.probability_ratio_ngram:
                 return "Probability ratio n-gram"
@@ -304,6 +294,9 @@ class LinguisticDistributionalModel(metaclass=ABCMeta):
             elif slug == "probability_ratios_ngram":
                 return cls.probability_ratio_ngram
 
+            elif slug == "conditional_probability_ngram":
+                return cls.conditional_probability_ngram
+
             elif slug == "pmi_ngram":
                 return cls.pmi_ngram
 
@@ -316,38 +309,40 @@ class LinguisticDistributionalModel(metaclass=ABCMeta):
         @classmethod
         def from_name(cls, name: str) -> LinguisticDistributionalModel.ModelType:
             if name == "CBOW":
-                return LinguisticDistributionalModel.ModelType.cbow
+                return cls.cbow
             elif name == "Skip-gram":
-                return LinguisticDistributionalModel.ModelType.skip_gram
+                return cls.skip_gram
             elif name == "co-occurrence (unsummed)":
                 # TODO: these should be capitalised for consistency, but this will require editing and renaming results file
-                return LinguisticDistributionalModel.ModelType.unsummed_cooccurrence
+                return cls.unsummed_cooccurrence
             elif name == "co-occurrence":
-                return LinguisticDistributionalModel.ModelType.cooccurrence
+                return cls.cooccurrence
             elif name == "log co-occurrence":
-                return LinguisticDistributionalModel.ModelType.log_cooccurrence
+                return cls.log_cooccurrence
             elif name == "co-occurrence probability":
-                return LinguisticDistributionalModel.ModelType.cooccurrence_probability
+                return cls.cooccurrence_probability
             elif name == "Token probability":
-                return LinguisticDistributionalModel.ModelType.token_probability
+                return cls.token_probability
             elif name == "Context probability":
-                return LinguisticDistributionalModel.ModelType.context_probability
+                return cls.context_probability
             elif name == "Conditional probability":
-                return LinguisticDistributionalModel.ModelType.conditional_probability
+                return cls.conditional_probability
             elif name == "Probability ratio":
-                return LinguisticDistributionalModel.ModelType.probability_ratio
+                return cls.probability_ratio
             elif name == "PMI":
-                return LinguisticDistributionalModel.ModelType.pmi
+                return cls.pmi
             elif name == "PPMI":
-                return LinguisticDistributionalModel.ModelType.ppmi
+                return cls.ppmi
             elif name == "log n-gram":
-                return LinguisticDistributionalModel.ModelType.log_ngram
+                return cls.log_ngram
+            elif name == "Conditional probability n-gram":
+                return cls.conditional_probability_ngram
             elif name == "Probability ratio n-gram":
-                return LinguisticDistributionalModel.ModelType.probability_ratio_ngram
+                return cls.probability_ratio_ngram
             elif name == "PMI n-gram":
-                return LinguisticDistributionalModel.ModelType.pmi_ngram
+                return cls.pmi_ngram
             elif name == "PPMI n-gram":
-                return LinguisticDistributionalModel.ModelType.ppmi_ngram
+                return cls.ppmi_ngram
             else:
                 raise ValueError()
 
