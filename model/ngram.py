@@ -125,13 +125,13 @@ class LogNgramModel(NgramModel):
 
 class ConditionalProbabilityNgramModel(NgramModel):
     """
-    A model where the association between word w and v is the conditional probability
+    A model where the association between word w1 and w2 is the conditional probability
 
-        p(w|v) = p(w,v) / p(v)
+        p(w2 | w1) = p(w1, w2) / p(w1)
 
-    I.e. the probability of encountering (context) token w in the context of given (target) token v.
+    I.e. the probability of encountering (context) token w2 in the context of given (target) token w1.
 
-    Not necessarily symmetric.
+    Not necessarily symmetric (w1 is the first word, w2 is the second word).
     """
     def __init__(self,
                  corpus_meta: CorpusMetadata,
