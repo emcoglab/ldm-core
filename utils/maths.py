@@ -18,6 +18,8 @@ caiwingfield.net
 from __future__ import annotations
 
 from enum import Enum, auto
+from functools import partial
+from typing import Callable
 
 from nltk import edit_distance
 from numpy import array, log, exp, corrcoef, where
@@ -86,6 +88,10 @@ class DistanceType(Enum):
             return cls.Minkowski3
         else:
             raise NotImplementedError(name)
+
+    @property
+    def distance_function(self) -> Callable[[array, array], float]:
+        return partial(distance, distance_type=self)
 
 
 def distance(u: array, v: array, distance_type: DistanceType) -> float:
