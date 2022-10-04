@@ -6,6 +6,7 @@ date_format = "%Y-%m-%d %H:%M:%S"
 
 def print_progress(iteration: int, total: int,
                    prefix: str = '', suffix: str = '',
+                   *,
                    decimals: int = 1,
                    bar_length: int = 100,
                    clear_on_completion: bool = False):
@@ -22,17 +23,14 @@ def print_progress(iteration: int, total: int,
         clear_on_completion - Optional  : clear the bar when it reaches 100% (bool)
     """
     str_format = "{0:." + str(decimals) + "f}"
-    portion_complete = iteration/float(total)
+    portion_complete = iteration / float(total)
     percents = str_format.format(100 * portion_complete)
     filled_length = int(round(bar_length * portion_complete))
     bar = '█' * filled_length + '-' * (bar_length - filled_length)
 
-    stdout.write(f'\r{prefix}|{bar}| {percents}%{suffix}'),
+    stdout.write(f'\r{prefix}|{bar}| {percents}%{suffix}')
 
     if iteration == total:
-        if clear_on_completion:
-            stdout.write('\r')
-        else:
-            stdout.write('\n')
+        stdout.write("\r" if clear_on_completion else "\n")
 
     stdout.flush()
