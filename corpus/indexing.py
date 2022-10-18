@@ -118,6 +118,7 @@ class FreqDist(nltk.probability.FreqDist):
         top_is_zero:
             if True (default), the rank of the most frequent token is 0, so that the rank can be used as an index in a
             list of ordered terms.
+            If False, the top rank is 1.
         missing_rank:
             if the token provided is has a frequency of 0 (i.e. the item is not found), its rank will be returned as
             this value (default None).
