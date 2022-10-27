@@ -424,7 +424,7 @@ class LinguisticDistributionalModel(metaclass=ABCMeta):
         :param memory_map: Whether to load the model memory-mapped when loading. Default False.
         """
         if self.is_trained and not force_retrain:
-            logger.info(f"{self.name} is already trained")
+            pass
         elif self.could_load and not force_retrain:
             logger.info(f"Loading {self.name} model from {self._model_filename_with_ext}")
             if memory_map:
