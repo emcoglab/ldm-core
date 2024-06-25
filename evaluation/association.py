@@ -32,7 +32,7 @@ from pandas import DataFrame
 
 from .test import Test, Tester
 from .results import EvaluationResults
-from ..model.base import LinguisticDistributionalModel, VectorSemanticModel
+from ..model.base import LinguisticDistributionalModel, VectorModel
 from ..model.ngram import NgramModel
 from ..utils.exceptions import WordNotFoundError
 from ..utils.maths import DistanceType, CorrelationType
@@ -150,7 +150,7 @@ class AssociationTester(Tester):
             try:
                 if isinstance(model, NgramModel):
                     return model.association_between(w1, w2)
-                elif isinstance(model, VectorSemanticModel):
+                elif isinstance(model, VectorModel):
                     return model.distance_between(w1, w2, distance_type)
                 else:
                     raise NotImplementedError()
@@ -222,7 +222,7 @@ class AssociationTester(Tester):
     def _validate_model_params(model: LinguisticDistributionalModel, distance_type: Optional[DistanceType]):
         if isinstance(model, NgramModel):
             assert distance_type is None
-        if isinstance(model, VectorSemanticModel):
+        if isinstance(model, VectorModel):
             assert distance_type is not None
 
 

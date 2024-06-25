@@ -111,22 +111,26 @@ class FreqDist(nltk.probability.FreqDist):
             # instances are loaded as dicts, so we must cast it up to a FreqDist
             return cls(json.load(file))
 
-    def rank(self, token) -> int:
+    def rank(self, token, *, top_is_zero = True, missing_rank = None) -> int:
         """
         The rank of a token in an ordered list of all sampled tokens, ordered most- to least-frequent.
 
-        NOTE: The rank of the most frequent token is 0, so that the rank can be used as an index in a list of ordered
-              terms.
-
-        A rank of -1 indicates that the token is not found.
+        top_is_zero:
+            if True (default), the rank of the most frequent token is 0, so that the rank can be used as an index in a
+            list of ordered terms.
+            If False, the top rank is 1.
+        missing_rank:
+            if the token provided is has a frequency of 0 (i.e. the item is not found), its rank will be returned as
+            this value (default None).
         """
         freq = self[token]
         if freq == 0:
-            # If the token is not found, return -1
-            return -1
+            return missing_rank
         else:
             rank = self.most_common().index((token, freq))
-            return rank
+        if not top_is_zero:
+            rank += 1
+        return rank
 
     def most_common_tokens(self, top_n: int = None) -> List[str]:
         """A list of the most common tokens, in order."""

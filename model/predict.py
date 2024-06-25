@@ -22,7 +22,7 @@ from os import path, makedirs
 
 import gensim
 
-from .base import VectorSemanticModel, LinguisticDistributionalModel
+from .base import VectorModel, LinguisticDistributionalModel
 from ..utils.exceptions import WordNotFoundError
 from ..utils.maths import distance, DistanceType
 from ..corpus.corpus import CorpusMetadata, BatchedCorpus
@@ -30,7 +30,7 @@ from ..corpus.corpus import CorpusMetadata, BatchedCorpus
 logger = logging.getLogger(__name__)
 
 
-class PredictVectorModel(VectorSemanticModel):
+class PredictVectorModel(VectorModel):
     """A vector space model where words are predicted rather than counted."""
     def __init__(self,
                  model_type: LinguisticDistributionalModel.ModelType,
@@ -150,7 +150,7 @@ class CbowModel(PredictVectorModel):
                  window_radius: int,
                  embedding_size: int,
                  n_workers: int = None):
-        super().__init__(VectorSemanticModel.ModelType.cbow,
+        super().__init__(VectorModel.ModelType.cbow,
                          corpus_meta, window_radius, embedding_size, n_workers)
 
     def _retrain(self):
@@ -176,7 +176,7 @@ class SkipGramModel(PredictVectorModel):
                  window_radius: int,
                  embedding_size: int,
                  n_workers: int = None):
-        super().__init__(VectorSemanticModel.ModelType.skip_gram,
+        super().__init__(VectorModel.ModelType.skip_gram,
                          corpus_meta, window_radius, embedding_size, n_workers)
 
     def _retrain(self):

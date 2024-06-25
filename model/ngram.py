@@ -18,8 +18,9 @@ caiwingfield.net
 import logging
 from abc import ABCMeta
 
-from .base import VectorSemanticModel, LinguisticDistributionalModel
-from .count import CountVectorModel, LogCoOccurrenceCountModel, PPMIModel, ProbabilityRatioModel, PMIModel
+from .base import VectorModel, LinguisticDistributionalModel
+from .count import CountVectorModel, LogCoOccurrenceCountModel, PPMIModel, ProbabilityRatioModel, PMIModel, \
+    ConditionalProbabilityModel
 from ..corpus.corpus import CorpusMetadata
 from ..corpus.indexing import FreqDist
 from ..utils.exceptions import WordNotFoundError
@@ -84,47 +85,68 @@ class NgramModel(LinguisticDistributionalModel, metaclass=ABCMeta):
     def association_between(self, word_1, word_2) -> float:
         """
         Returns the association between the two specified words.
-        Not guaranteed to be symmetric.
+        Not guaranteed to be symmetric: word_1 will be treated as the target word,
+                                        word_2 will be treated as the context word.
         :param word_1:
         :param word_2:
         :return:
         :raises: WordNotFoundError
         """
+
         try:
-            word_1_vector = self.underlying_count_model.vector_for_word(word_1)
+            target_word_vector = self.underlying_count_model.vector_for_word(word_1)
         except KeyError:
             raise WordNotFoundError(f"The word '{word_1}' was not found.")
 
         try:
-            word_2_index = self.underlying_count_model.token_index.token2id[word_2]
+            context_word_index = self.underlying_count_model.token_index.token2id[word_2]
         except KeyError:
             raise WordNotFoundError(f"The word '{word_2}' was not found.")
 
-        return word_1_vector[0, word_2_index]
+        return target_word_vector[0, context_word_index]
 
 
 class LogNgramModel(NgramModel):
     """
-    A model where the distance between word w and u is not the distance between their log n-gram vectors, but is the
-    u-entry in the v-vector (which equals the v-entry in the u-vector as the log co-occurrence matrix is symmetric.
+    A model where the association between word w and v is the w-entry in the v-vector
 
-    log [ n(c,t) + 1 ]
+        log [ n(w,v) + 1 ]
 
-    c: context token
-    t: target token
+    (which equals the v-entry in the w-vector as the log co-occurrence matrix is symmetric).
     """
 
     def __init__(self,
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.log_ngram,
+        super().__init__(VectorModel.ModelType.log_ngram,
                          LogCoOccurrenceCountModel(corpus_meta, window_radius, freq_dist))
+
+
+class ConditionalProbabilityNgramModel(NgramModel):
+    """
+    A model where the association between word w1 and w2 is the conditional probability
+
+        p(w2 | w1) = p(w1, w2) / p(w1)
+
+    I.e. the probability of encountering (context) token w2 in the context of given (target) token w1.
+
+    Not necessarily symmetric (w1 is the first word, w2 is the second word).
+    """
+    def __init__(self,
+                 corpus_meta: CorpusMetadata,
+                 window_radius: int,
+                 freq_dist: FreqDist = None):
+        super().__init__(VectorModel.ModelType.conditional_probability_ngram,
+                         ConditionalProbabilityModel(corpus_meta, window_radius, freq_dist))
 
 
 class ProbabilityRatioNgramModel(NgramModel):
     """
-    A model where the distance between word w and u is the probability ratio p(u,v)/p(u)p(v).
+    A model where the association between word w and v is the probability ratio
+
+        r(w, v) = p(w,v) / p(w) p(v)
+
     Should be symmetric.
     """
 
@@ -132,13 +154,13 @@ class ProbabilityRatioNgramModel(NgramModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.probability_ratio_ngram,
+        super().__init__(VectorModel.ModelType.probability_ratio_ngram,
                          ProbabilityRatioModel(corpus_meta, window_radius, freq_dist))
 
 
 class PMINgramModel(NgramModel):
     """
-    A model where the distance between word w and u is the PMI between words w and u.
+    A model where the association between word w and v is the PMI between words w and u.
     Should be symmetric.
     """
 
@@ -146,13 +168,13 @@ class PMINgramModel(NgramModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.pmi_ngram,
+        super().__init__(VectorModel.ModelType.pmi_ngram,
                          PMIModel(corpus_meta, window_radius, freq_dist))
 
 
 class PPMINgramModel(NgramModel):
     """
-    A model where the distance between word w and u is the PPMI between words w and u.
+    A model where the association between word w and v is the PPMI between words w and v.
     Should be symmetric.
     """
 
@@ -160,5 +182,5 @@ class PPMINgramModel(NgramModel):
                  corpus_meta: CorpusMetadata,
                  window_radius: int,
                  freq_dist: FreqDist = None):
-        super().__init__(VectorSemanticModel.ModelType.ppmi_ngram,
+        super().__init__(VectorModel.ModelType.ppmi_ngram,
                          PPMIModel(corpus_meta, window_radius, freq_dist))

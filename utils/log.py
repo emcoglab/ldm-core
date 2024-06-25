@@ -6,6 +6,7 @@ date_format = "%Y-%m-%d %H:%M:%S"
 
 def print_progress(iteration: int, total: int,
                    prefix: str = '', suffix: str = '',
+                   *,
                    decimals: int = 1,
                    bar_length: int = 100,
                    clear_on_completion: bool = False):
@@ -21,20 +22,20 @@ def print_progress(iteration: int, total: int,
         bar_length          - Optional  : character length of bar (Int)
         clear_on_completion - Optional  : clear the bar when it reaches 100% (bool)
     """
+    full_char  = '█'
+    empty_char = '-'
+
     if total == 0:
         return  # Prevent divide-by-zero errors
-    str_format = "{0:." + str(decimals) + "f}"
-    portion_complete = iteration/float(total)
-    percents = str_format.format(100 * portion_complete)
-    filled_length = int(round(bar_length * portion_complete))
-    bar = '█' * filled_length + '-' * (bar_length - filled_length)
 
-    stdout.write(f'\r{prefix}|{bar}| {percents}%{suffix}'),
+	portion_complete = iteration / float(total)
+    percents = f"{100 * portion_complete:.{decimals}f}%"
+    filled_length = int(round(bar_length * portion_complete))
+    bar = (full_char * filled_length) + (empty_char * (bar_length - filled_length))
+
+    stdout.write(f'\r{prefix}|{bar}| {percents}{suffix}'),
 
     if iteration == total:
-        if clear_on_completion:
-            stdout.write('\r')
-        else:
-            stdout.write('\n')
+        stdout.write("\r" if clear_on_completion else "\n")
 
     stdout.flush()
