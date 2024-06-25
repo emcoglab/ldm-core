@@ -430,6 +430,10 @@ class CoOccurrenceProbabilityModel(CountVectorModel):
         # The width of the window is twice the radius
         # We don't do 2r+1 because we only count the context words, not the target word
         self._model /= self.window_radius * 2
+        if self._model.shape == (0, 0) and self.freq_dist.N() == 0:
+            # Empty model
+            logger.warning("Empty model encountered")
+            return
         self._model /= self.freq_dist.N()
 
 

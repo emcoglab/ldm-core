@@ -25,7 +25,10 @@ def print_progress(iteration: int, total: int,
     full_char  = '█'
     empty_char = '-'
 
-    portion_complete = iteration / float(total)
+    if total == 0:
+        return  # Prevent divide-by-zero errors
+
+	portion_complete = iteration / float(total)
     percents = f"{100 * portion_complete:.{decimals}f}%"
     filled_length = int(round(bar_length * portion_complete))
     bar = (full_char * filled_length) + (empty_char * (bar_length - filled_length))
