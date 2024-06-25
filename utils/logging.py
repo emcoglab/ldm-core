@@ -21,6 +21,8 @@ def print_progress(iteration: int, total: int,
         bar_length          - Optional  : character length of bar (Int)
         clear_on_completion - Optional  : clear the bar when it reaches 100% (bool)
     """
+    if total == 0:
+        return  # Prevent divide-by-zero errors
     str_format = "{0:." + str(decimals) + "f}"
     portion_complete = iteration/float(total)
     percents = str_format.format(100 * portion_complete)
